@@ -3,6 +3,9 @@ package azurerm
 import (
 	"fmt"
 	"log"
+	"time"
+
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 
 	"github.com/Azure/azure-sdk-for-go/services/preview/appplatform/mgmt/2019-05-01-preview/appplatform"
 	"github.com/hashicorp/go-azure-helpers/response"
@@ -24,6 +27,13 @@ func resourceArmSpringCloud() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,7 +67,8 @@ func resourceArmSpringCloud() *schema.Resource {
 
 func resourceArmSpringCloudCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForCreate(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	name := d.Get("name").(string)
 	resourceGroup := d.Get("resource_group_name").(string)
@@ -104,7 +115,8 @@ func resourceArmSpringCloudCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceArmSpringCloudRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForRead(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	id, err := azure.ParseAzureResourceID(d.Id())
 	if err != nil {
@@ -138,7 +150,8 @@ func resourceArmSpringCloudRead(d *schema.ResourceData, meta interface{}) error 
 
 func resourceArmSpringCloudUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForUpdate(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	name := d.Get("name").(string)
 	resourceGroup := d.Get("resource_group_name").(string)
@@ -161,7 +174,8 @@ func resourceArmSpringCloudUpdate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceArmSpringCloudDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForDelete(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	id, err := azure.ParseAzureResourceID(d.Id())
 	if err != nil {

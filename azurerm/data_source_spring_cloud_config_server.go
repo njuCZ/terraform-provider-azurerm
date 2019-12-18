@@ -2,6 +2,9 @@ package azurerm
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
@@ -11,7 +14,9 @@ import (
 func dataSourceArmSpringCloudConfigServer() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceArmSpringCloudConfigServerRead,
-
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(5 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"spring_cloud_id": {
 				Type:         schema.TypeString,
@@ -125,7 +130,8 @@ func dataSourceArmSpringCloudConfigServer() *schema.Resource {
 
 func dataSourceArmSpringCloudConfigServerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForRead(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	springCloudId := d.Get("spring_cloud_id").(string)
 	id, err := azure.ParseAzureResourceID(springCloudId)

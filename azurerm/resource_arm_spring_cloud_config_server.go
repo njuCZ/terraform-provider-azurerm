@@ -3,6 +3,9 @@ package azurerm
 import (
 	"fmt"
 	"log"
+	"time"
+
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 
 	"github.com/Azure/azure-sdk-for-go/services/preview/appplatform/mgmt/2019-05-01-preview/appplatform"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -21,6 +24,13 @@ func resourceArmSpringCloudConfigServer() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -152,7 +162,8 @@ func resourceArmSpringCloudConfigServerCreate(d *schema.ResourceData, meta inter
 
 func resourceArmSpringCloudConfigServerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForRead(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	id, err := azure.ParseAzureResourceID(d.Id())
 	if err != nil {
@@ -209,7 +220,8 @@ func resourceArmSpringCloudConfigServerDelete(d *schema.ResourceData, meta inter
 
 func modifySpringCloudConfigServer(d *schema.ResourceData, meta interface{}, springCloudId string, gitProperty *appplatform.ConfigServerGitProperty) error {
 	client := meta.(*ArmClient).AppPlatform.ServicesClient
-	ctx := meta.(*ArmClient).StopContext
+	ctx, cancel := timeouts.ForUpdate(meta.(*ArmClient).StopContext, d)
+	defer cancel()
 
 	id, err := azure.ParseAzureResourceID(springCloudId)
 	if err != nil {

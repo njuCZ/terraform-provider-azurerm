@@ -6,8 +6,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/appplatform/mgmt/appplatform"
+	"github.com/Azure/azure-sdk-for-go/services/preview/appplatform/mgmt/2019-05-01-preview/appplatform"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
@@ -22,13 +23,20 @@ import (
 
 func resourceArmSpringCloudDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceArmSpringCloudDeploymentCreate,
+		Create: resourceArmSpringCloudDeploymentCreateUpdate,
 		Read:   resourceArmSpringCloudDeploymentRead,
-		Update: resourceArmSpringCloudDeploymentUpdate,
+		Update: resourceArmSpringCloudDeploymentCreateUpdate,
 		Delete: resourceArmSpringCloudDeploymentDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -107,9 +115,9 @@ func resourceArmSpringCloudDeployment() *schema.Resource {
 	}
 }
 
-func resourceArmSpringCloudDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceArmSpringCloudDeploymentCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.DeploymentsClient
-	ctx, cancel := timeouts.ForCreate(meta.(*ArmClient).StopContext, d)
+	ctx, cancel := timeouts.ForCreateUpdate(meta.(*ArmClient).StopContext, d)
 	defer cancel()
 
 	name := d.Get("name").(string)
@@ -217,47 +225,6 @@ func resourceArmSpringCloudDeploymentRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceArmSpringCloudDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ArmClient).AppPlatform.DeploymentsClient
-	ctx, cancel := timeouts.ForUpdate(meta.(*ArmClient).StopContext, d)
-	defer cancel()
-
-	appName := d.Get("spring_cloud_app_name").(string)
-	name := d.Get("name").(string)
-	resourceGroup := d.Get("resource_group_name").(string)
-	springCloudName := d.Get("spring_cloud_name").(string)
-
-	cpu := d.Get("cpu").(int32)
-	memoryInGB := d.Get("memory_in_gb").(int32)
-	jvmOptions := d.Get("jvm_options").(string)
-	instanceCount := d.Get("instance_count").(int32)
-	runtimeVersion := d.Get("runtime_version").(string)
-
-	appResource := appplatform.DeploymentResource{
-		Properties: &appplatform.DeploymentResourceProperties{
-			AppName: utils.String(appName),
-			DeploymentSettings: &appplatform.DeploymentSettings{
-				CPU:                  &cpu,
-				MemoryInGB:           &memoryInGB,
-				JvmOptions:           &jvmOptions,
-				InstanceCount:        &instanceCount,
-				EnvironmentVariables: expandSpringCloudDeploymentEnv(d),
-				RuntimeVersion:       appplatform.RuntimeVersion(runtimeVersion),
-			},
-		},
-	}
-
-	future, err := client.Update(ctx, resourceGroup, springCloudName, appName, name, &appResource)
-	if err != nil {
-		return fmt.Errorf("Error updating Spring Cloud Deployment %q (Spring Cloud Service %q / App Name %q / Resource Group %q): %+v", name, springCloudName, appName, resourceGroup, err)
-	}
-	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
-		return fmt.Errorf("Error waiting for update of Spring Cloud Deployment %q (Spring Cloud Service %q / App Name %q / Resource Group %q): %+v", name, springCloudName, appName, resourceGroup, err)
-	}
-
-	return resourceArmSpringCloudDeploymentRead(d, meta)
-}
-
 func resourceArmSpringCloudDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).AppPlatform.DeploymentsClient
 	appsClient := meta.(*ArmClient).AppPlatform.AppsClient
@@ -279,7 +246,7 @@ func resourceArmSpringCloudDeploymentDelete(d *schema.ResourceData, meta interfa
 	}
 
 	// active deployment can not be deleted, so just return nil
-	if *appResp.Properties.ActiveDeploymentName == name {
+	if appResp.Properties.ActiveDeploymentName == nil || *appResp.Properties.ActiveDeploymentName == name {
 		return nil
 	}
 
@@ -290,14 +257,15 @@ func resourceArmSpringCloudDeploymentDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
+// if users don't specify jar_file, there will be a default spring cloud jar running
 func expandSpringCloudDeploymentUserSourceInfo(d *schema.ResourceData, meta interface{}, resourceGroup, springCloudName, appName string) (*appplatform.UserSourceInfo, error) {
 	userSourceInfo := appplatform.UserSourceInfo{
 		Type:         appplatform.Jar,
 		RelativePath: utils.String("<default>"),
 	}
-	if jarFile, ok := d.GetOk("jar_file"); ok {
+	if jarFile, ok := d.GetOk("jar_file"); ok && len(jarFile.(string)) != 0 {
 		appsClient := meta.(*ArmClient).AppPlatform.AppsClient
-		ctx, cancel := timeouts.ForCreate(meta.(*ArmClient).StopContext, d)
+		ctx, cancel := timeouts.ForRead(meta.(*ArmClient).StopContext, d)
 		defer cancel()
 
 		resourceUploadDefinition, err := appsClient.GetResourceUploadURL(ctx, resourceGroup, springCloudName, appName)
