@@ -50,8 +50,8 @@ func TestAccAzureRMSpringCloudActiveDeployment_complete(t *testing.T) {
 				Config: testAccAzureRMSpringCloudActiveDeployment_complete(ri, location),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "spring_cloud_deployment_name", fmt.Sprintf("acctestscd-%d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "persistent_disk.0.size_in_gb", "3"),
-					resource.TestCheckResourceAttr(resourceName, "temporary_disk.0.size_in_gb", "50"),
+					resource.TestCheckResourceAttr(resourceName, "persistent_disk.0.size_in_gb", "50"),
+					resource.TestCheckResourceAttr(resourceName, "temporary_disk.0.size_in_gb", "3"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
@@ -192,5 +192,5 @@ resource "azurerm_spring_cloud_active_deployment" "test" {
   spring_cloud_app_name         = azurerm_spring_cloud_app.test.name
   spring_cloud_deployment_name  = azurerm_spring_cloud_deployment.test1.name
 }
-`, testAccAzureRMSpringCloudDeployment_basic(rInt, location))
+`, testAccAzureRMSpringCloudDeployment_basic(rInt, location), rInt)
 }
