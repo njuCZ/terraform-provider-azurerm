@@ -8,6 +8,7 @@ import (
 type Client struct {
 	ServicesClient    *appplatform.ServicesClient
 	AppsClient        *appplatform.AppsClient
+	BindingsClient    *appplatform.BindingsClient
 	DeploymentsClient *appplatform.DeploymentsClient
 }
 
@@ -18,12 +19,16 @@ func NewClient(o *common.ClientOptions) *Client {
 	AppsClient := appplatform.NewAppsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&AppsClient.Client, o.ResourceManagerAuthorizer)
 
+	BindingsClient := appplatform.NewBindingsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
+	o.ConfigureClient(&BindingsClient.Client, o.ResourceManagerAuthorizer)
+
 	DeploymentsClient := appplatform.NewDeploymentsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&DeploymentsClient.Client, o.ResourceManagerAuthorizer)
 
 	return &Client{
 		ServicesClient:    &ServicesClient,
 		AppsClient:        &AppsClient,
+		BindingsClient:    &BindingsClient,
 		DeploymentsClient: &DeploymentsClient,
 	}
 }

@@ -457,6 +457,8 @@ func Provider() terraform.ResourceProvider {
 		"azurerm_spring_cloud_active_deployment":                                         resourceArmSpringCloudActiveDeployment(),
 		"azurerm_spring_cloud_app":                                                       resourceArmSpringCloudApp(),
 		"azurerm_spring_cloud_deployment":                                                resourceArmSpringCloudDeployment(),
+		"azurerm_spring_cloud_app_mysql_binding":                                         resourceArmSpringCloudAppMysqlBinding(),
+		"azurerm_spring_cloud_app_redis_binding":                                         resourceArmSpringCloudAppRedisBinding(),
 		"azurerm_spring_cloud_config_server":                                             resourceArmSpringCloudConfigServer(),
 		"azurerm_sql_active_directory_administrator":                                     resourceArmSqlAdministrator(),
 		"azurerm_sql_database":                                                           resourceArmSqlDatabase(),
