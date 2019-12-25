@@ -14,9 +14,8 @@ func TestAccAzureRMSpringCloudAppMysqlBinding_basic(t *testing.T) {
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAzureRMSpringCloudAppMysqlBinding_basic(ri, location),
@@ -106,7 +105,7 @@ resource "azurerm_mysql_server" "test" {
 resource "azurerm_mysql_database" "test" {
   name                = "acctest-db-%d"
   resource_group_name = azurerm_resource_group.test.name
-  server_name         = "azurerm_mysql_server.test.name
+  server_name         = azurerm_mysql_server.test.name
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
 }
@@ -116,12 +115,12 @@ resource "azurerm_spring_cloud_app_mysql_binding" "test" {
     resource_group_name    	= azurerm_resource_group.test.name
     spring_cloud_name       = azurerm_spring_cloud.test.name
     spring_cloud_app_name 	= azurerm_spring_cloud_app.test.name
-    db_server_id            = azurerm_mysql_server.test.id
+    mysql_server_id         = azurerm_mysql_server.test.id
     database_name           = azurerm_mysql_database.test.name
     username                = azurerm_mysql_server.test.administrator_login
     password                = azurerm_mysql_server.test.administrator_login_password
 }
-`, testAccAzureRMSpringCloudApp(rInt, location), rInt, rInt, rInt)
+`, testAccAzureRMSpringCloudActiveDeployment_basic(rInt, location), rInt, rInt, rInt)
 }
 
 func testAccAzureRMSpringCloudAppMysqlBinding_update(rInt int, location string) string {
@@ -155,7 +154,7 @@ resource "azurerm_mysql_server" "test" {
 resource "azurerm_mysql_database" "test1" {
   name                = "acctest-db1-%d"
   resource_group_name = azurerm_resource_group.test.name
-  server_name         = "azurerm_mysql_server.test.name
+  server_name         = azurerm_mysql_server.test.name
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
 }
@@ -165,10 +164,10 @@ resource "azurerm_spring_cloud_app_mysql_binding" "test" {
     resource_group_name    	= azurerm_resource_group.test.name
     spring_cloud_name       = azurerm_spring_cloud.test.name
     spring_cloud_app_name 	= azurerm_spring_cloud_app.test.name
-    db_server_id            = azurerm_mysql_server.test.id
+    mysql_server_id         = azurerm_mysql_server.test.id
     database_name           = azurerm_mysql_database.test1.name
     username                = azurerm_mysql_server.test.administrator_login
     password                = azurerm_mysql_server.test.administrator_login_password
 }
-`, testAccAzureRMSpringCloudApp(rInt, location), rInt, rInt)
+`, testAccAzureRMSpringCloudActiveDeployment_basic(rInt, location), rInt, rInt, rInt)
 }

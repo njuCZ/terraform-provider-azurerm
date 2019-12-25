@@ -14,9 +14,8 @@ func TestAccAzureRMSpringCloudAppRedisBinding_basic(t *testing.T) {
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAzureRMSpringCloudAppRedisBinding_basic(ri, location),
@@ -95,7 +94,7 @@ resource "azurerm_spring_cloud_app_redis_binding" "test" {
     redis_cache_id          = azurerm_redis_cache.test.id
     key                     = azurerm_redis_cache.test.primary_access_key
 }
-`, testAccAzureRMSpringCloudApp(rInt, location), rInt, rInt)
+`, testAccAzureRMSpringCloudActiveDeployment_basic(rInt, location), rInt, rInt)
 }
 
 func testAccAzureRMSpringCloudAppRedisBinding_update(rInt int, location string) string {
@@ -121,5 +120,5 @@ resource "azurerm_spring_cloud_app_redis_binding" "test" {
     key                     = azurerm_redis_cache.test.secondary_access_key
     ssl_enabled             = false
 }
-`, testAccAzureRMSpringCloudApp(rInt, location), rInt, rInt)
+`, testAccAzureRMSpringCloudActiveDeployment_basic(rInt, location), rInt, rInt)
 }
