@@ -3,6 +3,7 @@ package tests
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance"
@@ -21,6 +22,12 @@ func TestAccDataSourceAzureRMEventHubCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(data.ResourceName, "id"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "location"),
 				),
+			},
+			{
+				// make this resource could be deleted.
+				// dummy step to Wait for 4 hours and the same config
+				PreConfig: func() { time.Sleep(4 * time.Hour) }, // Cluster cannot be deleted until four hours after its creation time.
+				Config:    testAccDataSourceAzureRMEventHubCluster_basic(data),
 			},
 		},
 	})
