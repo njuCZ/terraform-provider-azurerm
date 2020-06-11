@@ -3,6 +3,7 @@ package tests
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -25,7 +26,12 @@ func TestAccAzureRMEventHubCluster_basic(t *testing.T) {
 					testCheckAzureRMEventHubClusterExists(data.ResourceName),
 				),
 			},
-			data.ImportStep(),
+			{
+				PreConfig:         func() { time.Sleep(4 * time.Hour) }, // Cluster cannot be deleted until four hours after its creation time.
+				ResourceName:      data.ResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -44,7 +50,11 @@ func TestAccAzureRMEventHubCluster_requiresImport(t *testing.T) {
 					testCheckAzureRMEventHubClusterExists(data.ResourceName),
 				),
 			},
-			data.RequiresImportErrorStep(testAccAzureRMEventHubCluster_requiresImport),
+			{
+				PreConfig:   func() { time.Sleep(4 * time.Hour) }, // Cluster cannot be deleted until four hours after its creation time.
+				Config:      testAccAzureRMEventHubCluster_requiresImport(data),
+				ExpectError: acceptance.RequiresImportError(data.ResourceType),
+			},
 		},
 	})
 }
@@ -63,7 +73,50 @@ func TestAccAzureRMEventHubCluster_complete(t *testing.T) {
 					testCheckAzureRMEventHubClusterExists(data.ResourceName),
 				),
 			},
+			{
+				PreConfig:         func() { time.Sleep(4 * time.Hour) }, // Cluster cannot be deleted until four hours after its creation time.
+				ResourceName:      data.ResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureRMEventHubCluster_update(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_eventhub_cluster", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckAzureRMEventHubClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMEventHubCluster_basic(data),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMEventHubClusterExists(data.ResourceName),
+				),
+			},
 			data.ImportStep(),
+			{
+				Config: testAccAzureRMEventHubCluster_complete(data),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMEventHubClusterExists(data.ResourceName),
+				),
+			},
+			data.ImportStep(),
+			{
+				Config: testAccAzureRMEventHubCluster_basic(data),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMEventHubClusterExists(data.ResourceName),
+				),
+			},
+			{
+				PreConfig:         func() { time.Sleep(4 * time.Hour) }, // Cluster cannot be deleted until four hours after its creation time.
+				ResourceName:      data.ResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
