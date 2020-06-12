@@ -160,43 +160,13 @@ func resourceArmEventHubClusterDelete(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	if _, err := client.Delete(ctx, id.ResourceGroup, id.Name); err != nil {
+	future, err := client.Delete(ctx, id.ResourceGroup, id.Name); err != nil {
 		return fmt.Errorf("deleting eventhub cluster %q (Resource Group %q): %+v", id.Name, id.ResourceGroup, err)
 	}
 
-	return waitForEventHubClusterToBeDeleted(ctx, client, id.ResourceGroup, id.Name, d)
-}
-
-func waitForEventHubClusterToBeDeleted(ctx context.Context, client *eventhub.ClustersClient, resourceGroup, name string, d *schema.ResourceData) error {
-	// we can't use the Waiter here since the WaitForCompletion API returns a 404 once it's deleted which is expected to be 200
-	log.Printf("[DEBUG] Waiting for EventHub Cluster (%q in Resource Group %q) to be deleted", name, resourceGroup)
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"200", "202"},
-		Target:  []string{"404"},
-		Refresh: eventHubClusterStateStatusCodeRefreshFunc(ctx, client, resourceGroup, name),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("waiting for EventHub Cluster (%q in Resource Group %q) to be deleted: %+v", name, resourceGroup, err)
+	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
+		return fmt.Errorf("waiting for deletion of eventhub cluster %q (Resource Group %q): %+v", id.Name, id.ResourceGroup, err)
 	}
 
 	return nil
-}
-
-func eventHubClusterStateStatusCodeRefreshFunc(ctx context.Context, client *eventhub.ClustersClient, resourceGroup, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		res, err := client.Get(ctx, resourceGroup, name)
-
-		log.Printf("Retrieving EventHub Cluster %q (Resource Group %q) returned Status %d", resourceGroup, name, res.StatusCode)
-
-		if err != nil {
-			if utils.ResponseWasNotFound(res.Response) {
-				return res, strconv.Itoa(res.StatusCode), nil
-			}
-			return nil, "", fmt.Errorf("polling for the status of the EventHub Cluster %q (RG: %q): %+v", name, resourceGroup, err)
-		}
-
-		return res, strconv.Itoa(res.StatusCode), nil
-	}
 }
