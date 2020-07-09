@@ -1,19 +1,24 @@
 module github.com/terraform-providers/terraform-provider-azurerm
 
 require (
-	github.com/Azure/azure-sdk-for-go v43.1.0+incompatible
+	github.com/Azure/azure-sdk-for-go v44.0.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.10.0
-	github.com/Azure/go-autorest/autorest/azure/cli v0.3.1 // indirect
+	github.com/Azure/go-autorest/autorest/azure/auth v0.10.0
 	github.com/Azure/go-autorest/autorest/date v0.2.0
+	github.com/Azure/go-autorest/autorest/to v0.3.0
+	github.com/aws/aws-sdk-go v1.30.12 // indirect
 	github.com/btubbs/datetime v0.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-azure-helpers v0.10.0
-	github.com/hashicorp/go-getter v1.4.0
+	github.com/hashicorp/go-getter v1.4.2-0.20200106182914-9813cbd4eb02
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.1
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hashicorp/hcl/v2 v2.3.0 // indirect
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20191212124732-c6ae6269b9d7 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.6.0
 	github.com/rickb777/date v1.12.5-0.20200422084442-6300e543c4d9
 	github.com/satori/go.uuid v1.2.0
@@ -21,8 +26,10 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/terraform-providers/terraform-provider-azuread v0.9.0
 	github.com/tombuildsstuff/giovanni v0.10.0
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
-	golang.org/x/net v0.0.0-20191009170851-d66e71096ffb
+	github.com/zclconf/go-cty v1.2.1 // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
+	golang.org/x/tools v0.0.0-20190628153133-6cdbf07be9d0
 	gopkg.in/yaml.v2 v2.2.4
 )
 
