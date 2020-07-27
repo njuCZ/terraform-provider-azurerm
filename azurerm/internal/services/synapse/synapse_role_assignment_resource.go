@@ -28,7 +28,6 @@ func resourceArmSynapseRoleAssignment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -156,7 +155,6 @@ func resourceArmSynapseRoleAssignmentDelete(d *schema.ResourceData, meta interfa
 	}
 
 	client := synapseClient.AccessControlClient(id.WorkspaceName)
-
 	if _, err := client.DeleteRoleAssignmentByID(ctx, id.Id); err != nil {
 		return fmt.Errorf("deleting Synapse RoleAssignment %q (workspace %q): %+v", id, id.WorkspaceName, err)
 	}

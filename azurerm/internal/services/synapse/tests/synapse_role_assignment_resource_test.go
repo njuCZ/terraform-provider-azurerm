@@ -19,6 +19,11 @@ func TestAccAzureRMSynapseRoleAssignment_basic(t *testing.T) {
 		Providers:    acceptance.SupportedProviders,
 		CheckDestroy: testCheckAzureRMSynapseRoleAssignmentDestroy,
 		Steps: []resource.TestStep{
+			// apply firewall rule first
+			{
+				Config: testAccAzureRMSynapseRoleAssignment_template(data),
+			},
+			// create synapse role assignment
 			{
 				Config: testAccAzureRMSynapseRoleAssignment_basic(data),
 				Check: resource.ComposeTestCheckFunc(
@@ -37,6 +42,11 @@ func TestAccAzureRMSynapseRoleAssignment_requiresImport(t *testing.T) {
 		Providers:    acceptance.SupportedProviders,
 		CheckDestroy: testCheckAzureRMSynapseRoleAssignmentDestroy,
 		Steps: []resource.TestStep{
+			// apply firewall rule first
+			{
+				Config: testAccAzureRMSynapseRoleAssignment_template(data),
+			},
+			// create synapse role assignment
 			{
 				Config: testAccAzureRMSynapseRoleAssignment_basic(data),
 				Check: resource.ComposeTestCheckFunc(
@@ -84,12 +94,14 @@ func testCheckAzureRMSynapseRoleAssignmentDestroy(s *terraform.State) error {
 			return err
 		}
 		client := synapseClient.AccessControlClient(id.WorkspaceName)
-		if resp, err := client.GetRoleAssignmentByID(ctx, id.Id); err != nil {
+		resp, err := client.GetRoleAssignmentByID(ctx, id.Id)
+		if err != nil {
 			if !utils.ResponseWasNotFound(resp.Response) {
 				return fmt.Errorf("bad: Get on Synapse.AccessControlClient: %+v", err)
 			}
+			return nil
 		}
-		return nil
+		return fmt.Errorf("expected no Synapse Role Assignment but found %+v", resp)
 	}
 	return nil
 }
@@ -100,9 +112,9 @@ func testAccAzureRMSynapseRoleAssignment_basic(data acceptance.TestData) string 
 %s
 
 resource "azurerm_synapse_role_assignment" "test" {
-  workspace_name                       = azurerm_synapse_workspace.test.name
-  role_name                            = "Workspace Admin"
-  principal_id                         = data.azurerm_client_config.current.object_id
+  workspace_name = azurerm_synapse_workspace.test.name
+  role_name      = "Workspace Admin"
+  principal_id   = data.azurerm_client_config.current.object_id
 }
 `, template)
 }
@@ -113,9 +125,9 @@ func testAccAzureRMSynapseRoleAssignment_requiresImport(data acceptance.TestData
 %s
 
 resource "azurerm_synapse_role_assignment" "import" {
-  workspace_name                       = azurerm_synapse_role_assignment.test.workspace_name
-  role_name                            = azurerm_synapse_role_assignment.test.role_name
-  principal_id                         = azurerm_synapse_role_assignment.test.principal_id
+  workspace_name = azurerm_synapse_role_assignment.test.workspace_name
+  role_name      = azurerm_synapse_role_assignment.test.role_name
+  principal_id   = azurerm_synapse_role_assignment.test.principal_id
 }
 `, config)
 }
@@ -152,6 +164,13 @@ resource "azurerm_synapse_workspace" "test" {
   storage_data_lake_gen2_filesystem_id = azurerm_storage_data_lake_gen2_filesystem.test.id
   sql_administrator_login              = "sqladminuser"
   sql_administrator_login_password     = "H@Sh1CoR3!"
+}
+
+resource "azurerm_synapse_firewall_rule" "test" {
+  name                 = "AllowAll"
+  synapse_workspace_id = azurerm_synapse_workspace.test.id
+  start_ip_address     = "0.0.0.0"
+  end_ip_address       = "255.255.255.255"
 }
 
 data "azurerm_client_config" "current" {}
