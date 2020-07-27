@@ -13,7 +13,7 @@ type SynapseRoleAssignmentId struct {
 func SynapseRoleAssignmentID(input string) (*SynapseRoleAssignmentId, error) {
 	segments := strings.Split(input, "|")
 	if len(segments) != 2 {
-		return nil, fmt.Errorf("expected an ID in the format `{workspaceName}|{id} but got %q", input)
+		return nil, fmt.Errorf("expected an ID in the format `{workspaceId}|{id} but got %q", input)
 	}
 
 	workspaceId, err := SynapseWorkspaceID(segments[0])
