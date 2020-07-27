@@ -52,20 +52,22 @@ resource "azurerm_synapse_firewall_rule" "example" {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_synapse_role_assignment" "test" {
-  workspace_name = azurerm_synapse_workspace.test.name
-  role_name      = "Workspace Admin"
-  principal_id   = data.azurerm_client_config.current.object_id
+  synapse_workspace_id = azurerm_synapse_workspace.test.id
+  role_name            = "Sql Admin"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 ```
 ## Argument Reference
 
 The following arguments are supported:
 
-* `workspace_name` - (Required) The Name of the Synapse Workspace on which to create the Role Assignment. Changing this forces a new resource to be created.
+* `synapse_workspace_id` - (Required) The ID of the Synapse Workspace on which to create the Role Assignment. Changing this forces a new resource to be created.
 
 * `role_name` - (Required) The Role Name of the Synapse Built-In Role. Changing this forces a new resource to be created.
 
-* `principal_id` - (Required)The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.
+-> **NOTE:** Currently, the Synapse built-in roles are `Workspace Admin`, `Apache Spark Admin` and `Sql Admin`.
+
+* `principal_id` - (Required) The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.
 
 ## Attributes Reference
 
@@ -86,5 +88,5 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 Synapse Role Assignment can be imported using the `resource id`, e.g.
 
 ```shell
-terraform import azurerm_synapse_role_assignment.example "{workspaceName}|{roleAssignmentId}"
+terraform import azurerm_synapse_role_assignment.example "{workspaceId}|{roleAssignmentId}"
 ```

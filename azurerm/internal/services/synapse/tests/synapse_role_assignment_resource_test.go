@@ -70,7 +70,7 @@ func testCheckAzureRMSynapseRoleAssignmentExists(resourceName string) resource.T
 		if err != nil {
 			return err
 		}
-		client := synapseClient.AccessControlClient(id.WorkspaceName)
+		client := synapseClient.AccessControlClient(id.Workspace.Name)
 		if resp, err := client.GetRoleAssignmentByID(ctx, id.Id); err != nil {
 			if !utils.ResponseWasNotFound(resp.Response) {
 				return fmt.Errorf("bad: Synapse role assignment %q does not exist", id.Id)
@@ -83,6 +83,7 @@ func testCheckAzureRMSynapseRoleAssignmentExists(resourceName string) resource.T
 
 func testCheckAzureRMSynapseRoleAssignmentDestroy(s *terraform.State) error {
 	synapseClient := acceptance.AzureProvider.Meta().(*clients.Client).Synapse
+	workspaceClient := acceptance.AzureProvider.Meta().(*clients.Client).Synapse.WorkspaceClient
 	ctx := acceptance.AzureProvider.Meta().(*clients.Client).StopContext
 
 	for _, rs := range s.RootModule().Resources {
@@ -93,7 +94,14 @@ func testCheckAzureRMSynapseRoleAssignmentDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		client := synapseClient.AccessControlClient(id.WorkspaceName)
+		if resp, err := workspaceClient.Get(ctx, id.Workspace.ResourceGroup, id.Workspace.Name); err != nil {
+			if !utils.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("bad: Get on Synapse.WorkspaceClient %q, %+v", id.Workspace.String(), err)
+			}
+			return nil
+		}
+
+		client := synapseClient.AccessControlClient(id.Workspace.Name)
 		resp, err := client.GetRoleAssignmentByID(ctx, id.Id)
 		if err != nil {
 			if !utils.ResponseWasNotFound(resp.Response) {
@@ -112,9 +120,9 @@ func testAccAzureRMSynapseRoleAssignment_basic(data acceptance.TestData) string 
 %s
 
 resource "azurerm_synapse_role_assignment" "test" {
-  workspace_name = azurerm_synapse_workspace.test.name
-  role_name      = "Workspace Admin"
-  principal_id   = data.azurerm_client_config.current.object_id
+  synapse_workspace_id = azurerm_synapse_workspace.test.id
+  role_name            = "Sql Admin"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 `, template)
 }
@@ -125,9 +133,9 @@ func testAccAzureRMSynapseRoleAssignment_requiresImport(data acceptance.TestData
 %s
 
 resource "azurerm_synapse_role_assignment" "import" {
-  workspace_name = azurerm_synapse_role_assignment.test.workspace_name
-  role_name      = azurerm_synapse_role_assignment.test.role_name
-  principal_id   = azurerm_synapse_role_assignment.test.principal_id
+  synapse_workspace_id = azurerm_synapse_role_assignment.test.synapse_workspace_id
+  role_name            = azurerm_synapse_role_assignment.test.role_name
+  principal_id         = azurerm_synapse_role_assignment.test.principal_id
 }
 `, config)
 }

@@ -6,8 +6,8 @@ import (
 )
 
 type SynapseRoleAssignmentId struct {
-	WorkspaceName string
-	Id            string
+	Workspace *SynapseWorkspaceId
+	Id        string
 }
 
 func SynapseRoleAssignmentID(input string) (*SynapseRoleAssignmentId, error) {
@@ -16,8 +16,13 @@ func SynapseRoleAssignmentID(input string) (*SynapseRoleAssignmentId, error) {
 		return nil, fmt.Errorf("expected an ID in the format `{workspaceName}|{id} but got %q", input)
 	}
 
+	workspaceId, err := SynapseWorkspaceID(segments[0])
+	if err != nil {
+		return nil, err
+	}
+
 	return &SynapseRoleAssignmentId{
-		WorkspaceName: segments[0],
-		Id:            segments[1],
+		Workspace: workspaceId,
+		Id:        segments[1],
 	}, nil
 }
