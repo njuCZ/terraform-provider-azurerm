@@ -129,9 +129,9 @@ func resourceArmHPCCacheNFSTargetCreateOrUpdate(d *schema.ResourceData, meta int
 
 	// Construct parameters
 	param := &storagecache.StorageTarget{
-		StorageTargetProperties: &storagecache.StorageTargetProperties{
+		BasicStorageTargetProperties: &storagecache.StorageTargetProperties{
 			Junctions:  expandNamespaceJunctions(d.Get("namespace_junction").(*schema.Set).List()),
-			TargetType: storagecache.StorageTargetTypeNfs3,
+			TargetType: storagecache.TargetTypeStorageTargetProperties,
 			Nfs3: &storagecache.Nfs3Target{
 				Target:     utils.String(d.Get("target_host_name").(string)),
 				UsageModel: utils.String(d.Get("usage_model").(string)),
@@ -186,7 +186,7 @@ func resourceArmHPCCacheNFSTargetRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("resource_group_name", id.ResourceGroup)
 	d.Set("cache_name", id.Cache)
 
-	if props := resp.StorageTargetProperties; props != nil {
+	if props, ok := resp.BasicStorageTargetProperties.AsStorageTargetProperties(); ok && props != nil {
 		if nfs3 := props.Nfs3; nfs3 != nil {
 			d.Set("target_host_name", nfs3.Target)
 			d.Set("usage_model", nfs3.UsageModel)

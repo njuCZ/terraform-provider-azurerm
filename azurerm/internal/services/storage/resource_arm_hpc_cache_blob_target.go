@@ -104,9 +104,9 @@ func resourceArmHPCCacheBlobTargetCreateOrUpdate(d *schema.ResourceData, meta in
 		},
 	}
 	param := &storagecache.StorageTarget{
-		StorageTargetProperties: &storagecache.StorageTargetProperties{
+		BasicStorageTargetProperties: &storagecache.StorageTargetProperties{
 			Junctions:  &namespaceJunction,
-			TargetType: storagecache.StorageTargetTypeClfs,
+			TargetType: storagecache.TargetTypeStorageTargetProperties,
 			Clfs: &storagecache.ClfsTarget{
 				Target: utils.String(containerId),
 			},
@@ -161,7 +161,7 @@ func resourceArmHPCCacheBlobTargetRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_group_name", id.ResourceGroup)
 	d.Set("cache_name", id.Cache)
 
-	if props := resp.StorageTargetProperties; props != nil {
+	if props, ok := resp.BasicStorageTargetProperties.AsStorageTargetProperties(); ok && props != nil {
 		storageContainerId := ""
 		if props.Clfs != nil && props.Clfs.Target != nil {
 			storageContainerId = *props.Clfs.Target

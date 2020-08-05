@@ -7,7 +7,7 @@ import (
 )
 
 type Client struct {
-	ApplicationGatewaysClient            *network.ApplicationGatewaysClient
+	ApplicationGatewaysClient            *networkLegacy.ApplicationGatewaysClient
 	ApplicationSecurityGroupsClient      *network.ApplicationSecurityGroupsClient
 	AzureFirewallsClient                 *network.AzureFirewallsClient
 	BastionHostsClient                   *network.BastionHostsClient
@@ -43,13 +43,13 @@ type Client struct {
 	VpnGatewaysClient                    *network.VpnGatewaysClient
 	VpnServerConfigurationsClient        *network.VpnServerConfigurationsClient
 	WatcherClient                        *network.WatchersClient
-	WebApplicationFirewallPoliciesClient *network.WebApplicationFirewallPoliciesClient
+	WebApplicationFirewallPoliciesClient *networkLegacy.WebApplicationFirewallPoliciesClient
 	PrivateDnsZoneGroupClient            *network.PrivateDNSZoneGroupsClient
 	PrivateLinkServiceClient             *network.PrivateLinkServicesClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	ApplicationGatewaysClient := network.NewApplicationGatewaysClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
+	ApplicationGatewaysClient := networkLegacy.NewApplicationGatewaysClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&ApplicationGatewaysClient.Client, o.ResourceManagerAuthorizer)
 
 	ApplicationSecurityGroupsClient := network.NewApplicationSecurityGroupsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
@@ -163,7 +163,7 @@ func NewClient(o *common.ClientOptions) *Client {
 	WatcherClient := network.NewWatchersClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&WatcherClient.Client, o.ResourceManagerAuthorizer)
 
-	WebApplicationFirewallPoliciesClient := network.NewWebApplicationFirewallPoliciesClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
+	WebApplicationFirewallPoliciesClient := networkLegacy.NewWebApplicationFirewallPoliciesClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&WebApplicationFirewallPoliciesClient.Client, o.ResourceManagerAuthorizer)
 
 	return &Client{
