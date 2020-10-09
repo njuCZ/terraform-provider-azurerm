@@ -153,6 +153,15 @@ The following attributes are exported:
 
 * `id` - The ID of the Spring Cloud Service.
 
+~> **Note:** to get the internal load balance IP, users could use following script to get it.
+```
+data "azurerm_lb" "test" {
+  name                = "kubernetes-internal"
+  resource_group_name = azurerm_spring_cloud_service.test.network.0.service_runtime_network_resource_group
+}
+```
+`data.azurerm_lb.test.private_ip_address` is the Load Balance IP.
+
 ## Timeouts
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
