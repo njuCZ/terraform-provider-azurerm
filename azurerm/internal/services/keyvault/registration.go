@@ -25,6 +25,7 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 		"azurerm_key_vault_certificate":        dataSourceArmKeyVaultCertificate(),
 		"azurerm_key_vault_certificate_issuer": dataSourceArmKeyVaultCertificateIssuer(),
 		"azurerm_key_vault_key":                dataSourceArmKeyVaultKey(),
+		"azurerm_key_vault_key_decrypt":        dataSourceArmKeyVaultKeyDecrypt(),
 		"azurerm_key_vault_secret":             dataSourceArmKeyVaultSecret(),
 		"azurerm_key_vault":                    dataSourceArmKeyVault(),
 	}
@@ -37,6 +38,7 @@ func (r Registration) SupportedResources() map[string]*schema.Resource {
 		"azurerm_key_vault_certificate":        resourceArmKeyVaultCertificate(),
 		"azurerm_key_vault_certificate_issuer": resourceArmKeyVaultCertificateIssuer(),
 		"azurerm_key_vault_key":                resourceArmKeyVaultKey(),
+		"azurerm_key_vault_key_encrypt":        resourceArmKeyVaultKeyEncrypt(),
 		"azurerm_key_vault_secret":             resourceArmKeyVaultSecret(),
 		"azurerm_key_vault":                    resourceArmKeyVault(),
 	}
