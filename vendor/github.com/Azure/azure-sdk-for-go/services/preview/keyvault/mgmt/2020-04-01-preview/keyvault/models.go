@@ -30,297 +30,10 @@ import (
 )
 
 // The package's fully qualified name.
-const fqdn = "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2019-09-01/keyvault"
+const fqdn = "github.com/Azure/azure-sdk-for-go/services/preview/keyvault/mgmt/2020-04-01-preview/keyvault"
 
-// AccessPolicyUpdateKind enumerates the values for access policy update kind.
-type AccessPolicyUpdateKind string
-
-const (
-	// Add ...
-	Add AccessPolicyUpdateKind = "add"
-	// Remove ...
-	Remove AccessPolicyUpdateKind = "remove"
-	// Replace ...
-	Replace AccessPolicyUpdateKind = "replace"
-)
-
-// PossibleAccessPolicyUpdateKindValues returns an array of possible values for the AccessPolicyUpdateKind const type.
-func PossibleAccessPolicyUpdateKindValues() []AccessPolicyUpdateKind {
-	return []AccessPolicyUpdateKind{Add, Remove, Replace}
-}
-
-// CertificatePermissions enumerates the values for certificate permissions.
-type CertificatePermissions string
-
-const (
-	// Backup ...
-	Backup CertificatePermissions = "backup"
-	// Create ...
-	Create CertificatePermissions = "create"
-	// Delete ...
-	Delete CertificatePermissions = "delete"
-	// Deleteissuers ...
-	Deleteissuers CertificatePermissions = "deleteissuers"
-	// Get ...
-	Get CertificatePermissions = "get"
-	// Getissuers ...
-	Getissuers CertificatePermissions = "getissuers"
-	// Import ...
-	Import CertificatePermissions = "import"
-	// List ...
-	List CertificatePermissions = "list"
-	// Listissuers ...
-	Listissuers CertificatePermissions = "listissuers"
-	// Managecontacts ...
-	Managecontacts CertificatePermissions = "managecontacts"
-	// Manageissuers ...
-	Manageissuers CertificatePermissions = "manageissuers"
-	// Purge ...
-	Purge CertificatePermissions = "purge"
-	// Recover ...
-	Recover CertificatePermissions = "recover"
-	// Restore ...
-	Restore CertificatePermissions = "restore"
-	// Setissuers ...
-	Setissuers CertificatePermissions = "setissuers"
-	// Update ...
-	Update CertificatePermissions = "update"
-)
-
-// PossibleCertificatePermissionsValues returns an array of possible values for the CertificatePermissions const type.
-func PossibleCertificatePermissionsValues() []CertificatePermissions {
-	return []CertificatePermissions{Backup, Create, Delete, Deleteissuers, Get, Getissuers, Import, List, Listissuers, Managecontacts, Manageissuers, Purge, Recover, Restore, Setissuers, Update}
-}
-
-// CreateMode enumerates the values for create mode.
-type CreateMode string
-
-const (
-	// CreateModeDefault ...
-	CreateModeDefault CreateMode = "default"
-	// CreateModeRecover ...
-	CreateModeRecover CreateMode = "recover"
-)
-
-// PossibleCreateModeValues returns an array of possible values for the CreateMode const type.
-func PossibleCreateModeValues() []CreateMode {
-	return []CreateMode{CreateModeDefault, CreateModeRecover}
-}
-
-// KeyPermissions enumerates the values for key permissions.
-type KeyPermissions string
-
-const (
-	// KeyPermissionsBackup ...
-	KeyPermissionsBackup KeyPermissions = "backup"
-	// KeyPermissionsCreate ...
-	KeyPermissionsCreate KeyPermissions = "create"
-	// KeyPermissionsDecrypt ...
-	KeyPermissionsDecrypt KeyPermissions = "decrypt"
-	// KeyPermissionsDelete ...
-	KeyPermissionsDelete KeyPermissions = "delete"
-	// KeyPermissionsEncrypt ...
-	KeyPermissionsEncrypt KeyPermissions = "encrypt"
-	// KeyPermissionsGet ...
-	KeyPermissionsGet KeyPermissions = "get"
-	// KeyPermissionsImport ...
-	KeyPermissionsImport KeyPermissions = "import"
-	// KeyPermissionsList ...
-	KeyPermissionsList KeyPermissions = "list"
-	// KeyPermissionsPurge ...
-	KeyPermissionsPurge KeyPermissions = "purge"
-	// KeyPermissionsRecover ...
-	KeyPermissionsRecover KeyPermissions = "recover"
-	// KeyPermissionsRestore ...
-	KeyPermissionsRestore KeyPermissions = "restore"
-	// KeyPermissionsSign ...
-	KeyPermissionsSign KeyPermissions = "sign"
-	// KeyPermissionsUnwrapKey ...
-	KeyPermissionsUnwrapKey KeyPermissions = "unwrapKey"
-	// KeyPermissionsUpdate ...
-	KeyPermissionsUpdate KeyPermissions = "update"
-	// KeyPermissionsVerify ...
-	KeyPermissionsVerify KeyPermissions = "verify"
-	// KeyPermissionsWrapKey ...
-	KeyPermissionsWrapKey KeyPermissions = "wrapKey"
-)
-
-// PossibleKeyPermissionsValues returns an array of possible values for the KeyPermissions const type.
-func PossibleKeyPermissionsValues() []KeyPermissions {
-	return []KeyPermissions{KeyPermissionsBackup, KeyPermissionsCreate, KeyPermissionsDecrypt, KeyPermissionsDelete, KeyPermissionsEncrypt, KeyPermissionsGet, KeyPermissionsImport, KeyPermissionsList, KeyPermissionsPurge, KeyPermissionsRecover, KeyPermissionsRestore, KeyPermissionsSign, KeyPermissionsUnwrapKey, KeyPermissionsUpdate, KeyPermissionsVerify, KeyPermissionsWrapKey}
-}
-
-// NetworkRuleAction enumerates the values for network rule action.
-type NetworkRuleAction string
-
-const (
-	// Allow ...
-	Allow NetworkRuleAction = "Allow"
-	// Deny ...
-	Deny NetworkRuleAction = "Deny"
-)
-
-// PossibleNetworkRuleActionValues returns an array of possible values for the NetworkRuleAction const type.
-func PossibleNetworkRuleActionValues() []NetworkRuleAction {
-	return []NetworkRuleAction{Allow, Deny}
-}
-
-// NetworkRuleBypassOptions enumerates the values for network rule bypass options.
-type NetworkRuleBypassOptions string
-
-const (
-	// AzureServices ...
-	AzureServices NetworkRuleBypassOptions = "AzureServices"
-	// None ...
-	None NetworkRuleBypassOptions = "None"
-)
-
-// PossibleNetworkRuleBypassOptionsValues returns an array of possible values for the NetworkRuleBypassOptions const type.
-func PossibleNetworkRuleBypassOptionsValues() []NetworkRuleBypassOptions {
-	return []NetworkRuleBypassOptions{AzureServices, None}
-}
-
-// PrivateEndpointConnectionProvisioningState enumerates the values for private endpoint connection
-// provisioning state.
-type PrivateEndpointConnectionProvisioningState string
-
-const (
-	// Creating ...
-	Creating PrivateEndpointConnectionProvisioningState = "Creating"
-	// Deleting ...
-	Deleting PrivateEndpointConnectionProvisioningState = "Deleting"
-	// Disconnected ...
-	Disconnected PrivateEndpointConnectionProvisioningState = "Disconnected"
-	// Failed ...
-	Failed PrivateEndpointConnectionProvisioningState = "Failed"
-	// Succeeded ...
-	Succeeded PrivateEndpointConnectionProvisioningState = "Succeeded"
-	// Updating ...
-	Updating PrivateEndpointConnectionProvisioningState = "Updating"
-)
-
-// PossiblePrivateEndpointConnectionProvisioningStateValues returns an array of possible values for the PrivateEndpointConnectionProvisioningState const type.
-func PossiblePrivateEndpointConnectionProvisioningStateValues() []PrivateEndpointConnectionProvisioningState {
-	return []PrivateEndpointConnectionProvisioningState{Creating, Deleting, Disconnected, Failed, Succeeded, Updating}
-}
-
-// PrivateEndpointServiceConnectionStatus enumerates the values for private endpoint service connection status.
-type PrivateEndpointServiceConnectionStatus string
-
-const (
-	// PrivateEndpointServiceConnectionStatusApproved ...
-	PrivateEndpointServiceConnectionStatusApproved PrivateEndpointServiceConnectionStatus = "Approved"
-	// PrivateEndpointServiceConnectionStatusDisconnected ...
-	PrivateEndpointServiceConnectionStatusDisconnected PrivateEndpointServiceConnectionStatus = "Disconnected"
-	// PrivateEndpointServiceConnectionStatusPending ...
-	PrivateEndpointServiceConnectionStatusPending PrivateEndpointServiceConnectionStatus = "Pending"
-	// PrivateEndpointServiceConnectionStatusRejected ...
-	PrivateEndpointServiceConnectionStatusRejected PrivateEndpointServiceConnectionStatus = "Rejected"
-)
-
-// PossiblePrivateEndpointServiceConnectionStatusValues returns an array of possible values for the PrivateEndpointServiceConnectionStatus const type.
-func PossiblePrivateEndpointServiceConnectionStatusValues() []PrivateEndpointServiceConnectionStatus {
-	return []PrivateEndpointServiceConnectionStatus{PrivateEndpointServiceConnectionStatusApproved, PrivateEndpointServiceConnectionStatusDisconnected, PrivateEndpointServiceConnectionStatusPending, PrivateEndpointServiceConnectionStatusRejected}
-}
-
-// Reason enumerates the values for reason.
-type Reason string
-
-const (
-	// AccountNameInvalid ...
-	AccountNameInvalid Reason = "AccountNameInvalid"
-	// AlreadyExists ...
-	AlreadyExists Reason = "AlreadyExists"
-)
-
-// PossibleReasonValues returns an array of possible values for the Reason const type.
-func PossibleReasonValues() []Reason {
-	return []Reason{AccountNameInvalid, AlreadyExists}
-}
-
-// SecretPermissions enumerates the values for secret permissions.
-type SecretPermissions string
-
-const (
-	// SecretPermissionsBackup ...
-	SecretPermissionsBackup SecretPermissions = "backup"
-	// SecretPermissionsDelete ...
-	SecretPermissionsDelete SecretPermissions = "delete"
-	// SecretPermissionsGet ...
-	SecretPermissionsGet SecretPermissions = "get"
-	// SecretPermissionsList ...
-	SecretPermissionsList SecretPermissions = "list"
-	// SecretPermissionsPurge ...
-	SecretPermissionsPurge SecretPermissions = "purge"
-	// SecretPermissionsRecover ...
-	SecretPermissionsRecover SecretPermissions = "recover"
-	// SecretPermissionsRestore ...
-	SecretPermissionsRestore SecretPermissions = "restore"
-	// SecretPermissionsSet ...
-	SecretPermissionsSet SecretPermissions = "set"
-)
-
-// PossibleSecretPermissionsValues returns an array of possible values for the SecretPermissions const type.
-func PossibleSecretPermissionsValues() []SecretPermissions {
-	return []SecretPermissions{SecretPermissionsBackup, SecretPermissionsDelete, SecretPermissionsGet, SecretPermissionsList, SecretPermissionsPurge, SecretPermissionsRecover, SecretPermissionsRestore, SecretPermissionsSet}
-}
-
-// SkuName enumerates the values for sku name.
-type SkuName string
-
-const (
-	// Premium ...
-	Premium SkuName = "premium"
-	// Standard ...
-	Standard SkuName = "standard"
-)
-
-// PossibleSkuNameValues returns an array of possible values for the SkuName const type.
-func PossibleSkuNameValues() []SkuName {
-	return []SkuName{Premium, Standard}
-}
-
-// StoragePermissions enumerates the values for storage permissions.
-type StoragePermissions string
-
-const (
-	// StoragePermissionsBackup ...
-	StoragePermissionsBackup StoragePermissions = "backup"
-	// StoragePermissionsDelete ...
-	StoragePermissionsDelete StoragePermissions = "delete"
-	// StoragePermissionsDeletesas ...
-	StoragePermissionsDeletesas StoragePermissions = "deletesas"
-	// StoragePermissionsGet ...
-	StoragePermissionsGet StoragePermissions = "get"
-	// StoragePermissionsGetsas ...
-	StoragePermissionsGetsas StoragePermissions = "getsas"
-	// StoragePermissionsList ...
-	StoragePermissionsList StoragePermissions = "list"
-	// StoragePermissionsListsas ...
-	StoragePermissionsListsas StoragePermissions = "listsas"
-	// StoragePermissionsPurge ...
-	StoragePermissionsPurge StoragePermissions = "purge"
-	// StoragePermissionsRecover ...
-	StoragePermissionsRecover StoragePermissions = "recover"
-	// StoragePermissionsRegeneratekey ...
-	StoragePermissionsRegeneratekey StoragePermissions = "regeneratekey"
-	// StoragePermissionsRestore ...
-	StoragePermissionsRestore StoragePermissions = "restore"
-	// StoragePermissionsSet ...
-	StoragePermissionsSet StoragePermissions = "set"
-	// StoragePermissionsSetsas ...
-	StoragePermissionsSetsas StoragePermissions = "setsas"
-	// StoragePermissionsUpdate ...
-	StoragePermissionsUpdate StoragePermissions = "update"
-)
-
-// PossibleStoragePermissionsValues returns an array of possible values for the StoragePermissions const type.
-func PossibleStoragePermissionsValues() []StoragePermissions {
-	return []StoragePermissions{StoragePermissionsBackup, StoragePermissionsDelete, StoragePermissionsDeletesas, StoragePermissionsGet, StoragePermissionsGetsas, StoragePermissionsList, StoragePermissionsListsas, StoragePermissionsPurge, StoragePermissionsRecover, StoragePermissionsRegeneratekey, StoragePermissionsRestore, StoragePermissionsSet, StoragePermissionsSetsas, StoragePermissionsUpdate}
-}
-
-// AccessPolicyEntry an identity that have access to the key vault. All identities in the array must use
-// the same tenant ID as the key vault's tenant ID.
+// AccessPolicyEntry an identity that have access to the key vault. All identities in the array must use the
+// same tenant ID as the key vault's tenant ID.
 type AccessPolicyEntry struct {
 	// TenantID - The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
 	TenantID *uuid.UUID `json:"tenantId,omitempty"`
@@ -367,6 +80,15 @@ type DeletedVault struct {
 	Type *string `json:"type,omitempty"`
 	// Properties - Properties of the vault
 	Properties *DeletedVaultProperties `json:"properties,omitempty"`
+}
+
+// MarshalJSON is the custom marshaler for DeletedVault.
+func (dv DeletedVault) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if dv.Properties != nil {
+		objectMap["properties"] = dv.Properties
+	}
+	return json.Marshal(objectMap)
 }
 
 // DeletedVaultListResult list of vaults
@@ -446,10 +168,15 @@ func (dvlr DeletedVaultListResult) IsEmpty() bool {
 	return dvlr.Value == nil || len(*dvlr.Value) == 0
 }
 
+// hasNextLink returns true if the NextLink is not empty.
+func (dvlr DeletedVaultListResult) hasNextLink() bool {
+	return dvlr.NextLink != nil && len(*dvlr.NextLink) != 0
+}
+
 // deletedVaultListResultPreparer prepares a request to retrieve the next set of results.
 // It returns nil if no more results exist.
 func (dvlr DeletedVaultListResult) deletedVaultListResultPreparer(ctx context.Context) (*http.Request, error) {
-	if dvlr.NextLink == nil || len(to.String(dvlr.NextLink)) < 1 {
+	if !dvlr.hasNextLink() {
 		return nil, nil
 	}
 	return autorest.Prepare((&http.Request{}).WithContext(ctx),
@@ -477,11 +204,16 @@ func (page *DeletedVaultListResultPage) NextWithContext(ctx context.Context) (er
 			tracing.EndSpan(ctx, sc, err)
 		}()
 	}
-	next, err := page.fn(ctx, page.dvlr)
-	if err != nil {
-		return err
+	for {
+		next, err := page.fn(ctx, page.dvlr)
+		if err != nil {
+			return err
+		}
+		page.dvlr = next
+		if !next.hasNextLink() || !next.IsEmpty() {
+			break
+		}
 	}
-	page.dvlr = next
 	return nil
 }
 
@@ -535,6 +267,16 @@ func (dvp DeletedVaultProperties) MarshalJSON() ([]byte, error) {
 	return json.Marshal(objectMap)
 }
 
+// Error the server error.
+type Error struct {
+	// Code - READ-ONLY; The error code.
+	Code *string `json:"code,omitempty"`
+	// Message - READ-ONLY; The error message.
+	Message *string `json:"message,omitempty"`
+	// InnerError - READ-ONLY; The inner error, contains a more specific error code.
+	InnerError *Error `json:"innererror,omitempty"`
+}
+
 // IPRule a rule governing the accessibility of a vault from a specific ip address or ip range.
 type IPRule struct {
 	// Value - An IPv4 address range in CIDR notation, such as '124.56.78.91' (simple IP address) or '124.56.78.0/24' (all addresses that start with 124.56.78).
@@ -549,6 +291,374 @@ type LogSpecification struct {
 	DisplayName *string `json:"displayName,omitempty"`
 	// BlobDuration - Blob duration of specification.
 	BlobDuration *string `json:"blobDuration,omitempty"`
+}
+
+// ManagedHsm resource information with extended details.
+type ManagedHsm struct {
+	autorest.Response `json:"-"`
+	// Properties - Properties of the managed HSM
+	Properties *ManagedHsmProperties `json:"properties,omitempty"`
+	// ID - READ-ONLY; The Azure Resource Manager resource ID for the managed HSM Pool.
+	ID *string `json:"id,omitempty"`
+	// Name - READ-ONLY; The name of the managed HSM Pool.
+	Name *string `json:"name,omitempty"`
+	// Type - READ-ONLY; The resource type of the managed HSM Pool.
+	Type *string `json:"type,omitempty"`
+	// Location - The supported Azure location where the managed HSM Pool should be created.
+	Location *string `json:"location,omitempty"`
+	// Sku - SKU details
+	Sku *ManagedHsmSku `json:"sku,omitempty"`
+	// Tags - Resource tags
+	Tags map[string]*string `json:"tags"`
+}
+
+// MarshalJSON is the custom marshaler for ManagedHsm.
+func (mh ManagedHsm) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if mh.Properties != nil {
+		objectMap["properties"] = mh.Properties
+	}
+	if mh.Location != nil {
+		objectMap["location"] = mh.Location
+	}
+	if mh.Sku != nil {
+		objectMap["sku"] = mh.Sku
+	}
+	if mh.Tags != nil {
+		objectMap["tags"] = mh.Tags
+	}
+	return json.Marshal(objectMap)
+}
+
+// ManagedHsmError the error exception.
+type ManagedHsmError struct {
+	// Error - READ-ONLY; The server error.
+	Error *Error `json:"error,omitempty"`
+}
+
+// ManagedHsmListResult list of managed HSM Pools
+type ManagedHsmListResult struct {
+	autorest.Response `json:"-"`
+	// Value - The list of managed HSM Pools.
+	Value *[]ManagedHsm `json:"value,omitempty"`
+	// NextLink - The URL to get the next set of managed HSM Pools.
+	NextLink *string `json:"nextLink,omitempty"`
+}
+
+// ManagedHsmListResultIterator provides access to a complete listing of ManagedHsm values.
+type ManagedHsmListResultIterator struct {
+	i    int
+	page ManagedHsmListResultPage
+}
+
+// NextWithContext advances to the next value.  If there was an error making
+// the request the iterator does not advance and the error is returned.
+func (iter *ManagedHsmListResultIterator) NextWithContext(ctx context.Context) (err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/ManagedHsmListResultIterator.NextWithContext")
+		defer func() {
+			sc := -1
+			if iter.Response().Response.Response != nil {
+				sc = iter.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
+	iter.i++
+	if iter.i < len(iter.page.Values()) {
+		return nil
+	}
+	err = iter.page.NextWithContext(ctx)
+	if err != nil {
+		iter.i--
+		return err
+	}
+	iter.i = 0
+	return nil
+}
+
+// Next advances to the next value.  If there was an error making
+// the request the iterator does not advance and the error is returned.
+// Deprecated: Use NextWithContext() instead.
+func (iter *ManagedHsmListResultIterator) Next() error {
+	return iter.NextWithContext(context.Background())
+}
+
+// NotDone returns true if the enumeration should be started or is not yet complete.
+func (iter ManagedHsmListResultIterator) NotDone() bool {
+	return iter.page.NotDone() && iter.i < len(iter.page.Values())
+}
+
+// Response returns the raw server response from the last page request.
+func (iter ManagedHsmListResultIterator) Response() ManagedHsmListResult {
+	return iter.page.Response()
+}
+
+// Value returns the current value or a zero-initialized value if the
+// iterator has advanced beyond the end of the collection.
+func (iter ManagedHsmListResultIterator) Value() ManagedHsm {
+	if !iter.page.NotDone() {
+		return ManagedHsm{}
+	}
+	return iter.page.Values()[iter.i]
+}
+
+// Creates a new instance of the ManagedHsmListResultIterator type.
+func NewManagedHsmListResultIterator(page ManagedHsmListResultPage) ManagedHsmListResultIterator {
+	return ManagedHsmListResultIterator{page: page}
+}
+
+// IsEmpty returns true if the ListResult contains no values.
+func (mhlr ManagedHsmListResult) IsEmpty() bool {
+	return mhlr.Value == nil || len(*mhlr.Value) == 0
+}
+
+// hasNextLink returns true if the NextLink is not empty.
+func (mhlr ManagedHsmListResult) hasNextLink() bool {
+	return mhlr.NextLink != nil && len(*mhlr.NextLink) != 0
+}
+
+// managedHsmListResultPreparer prepares a request to retrieve the next set of results.
+// It returns nil if no more results exist.
+func (mhlr ManagedHsmListResult) managedHsmListResultPreparer(ctx context.Context) (*http.Request, error) {
+	if !mhlr.hasNextLink() {
+		return nil, nil
+	}
+	return autorest.Prepare((&http.Request{}).WithContext(ctx),
+		autorest.AsJSON(),
+		autorest.AsGet(),
+		autorest.WithBaseURL(to.String(mhlr.NextLink)))
+}
+
+// ManagedHsmListResultPage contains a page of ManagedHsm values.
+type ManagedHsmListResultPage struct {
+	fn   func(context.Context, ManagedHsmListResult) (ManagedHsmListResult, error)
+	mhlr ManagedHsmListResult
+}
+
+// NextWithContext advances to the next page of values.  If there was an error making
+// the request the page does not advance and the error is returned.
+func (page *ManagedHsmListResultPage) NextWithContext(ctx context.Context) (err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/ManagedHsmListResultPage.NextWithContext")
+		defer func() {
+			sc := -1
+			if page.Response().Response.Response != nil {
+				sc = page.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
+	for {
+		next, err := page.fn(ctx, page.mhlr)
+		if err != nil {
+			return err
+		}
+		page.mhlr = next
+		if !next.hasNextLink() || !next.IsEmpty() {
+			break
+		}
+	}
+	return nil
+}
+
+// Next advances to the next page of values.  If there was an error making
+// the request the page does not advance and the error is returned.
+// Deprecated: Use NextWithContext() instead.
+func (page *ManagedHsmListResultPage) Next() error {
+	return page.NextWithContext(context.Background())
+}
+
+// NotDone returns true if the page enumeration should be started or is not yet complete.
+func (page ManagedHsmListResultPage) NotDone() bool {
+	return !page.mhlr.IsEmpty()
+}
+
+// Response returns the raw server response from the last page request.
+func (page ManagedHsmListResultPage) Response() ManagedHsmListResult {
+	return page.mhlr
+}
+
+// Values returns the slice of values for the current page or nil if there are no values.
+func (page ManagedHsmListResultPage) Values() []ManagedHsm {
+	if page.mhlr.IsEmpty() {
+		return nil
+	}
+	return *page.mhlr.Value
+}
+
+// Creates a new instance of the ManagedHsmListResultPage type.
+func NewManagedHsmListResultPage(getNextPage func(context.Context, ManagedHsmListResult) (ManagedHsmListResult, error)) ManagedHsmListResultPage {
+	return ManagedHsmListResultPage{fn: getNextPage}
+}
+
+// ManagedHsmProperties properties of the managed HSM Pool
+type ManagedHsmProperties struct {
+	// TenantID - The Azure Active Directory tenant ID that should be used for authenticating requests to the managed HSM pool.
+	TenantID *uuid.UUID `json:"tenantId,omitempty"`
+	// InitialAdminObjectIds - Array of initial administrators object ids for this managed hsm pool.
+	InitialAdminObjectIds *[]string `json:"initialAdminObjectIds,omitempty"`
+	// HsmURI - The URI of the managed hsm pool for performing operations on keys.
+	HsmURI *string `json:"hsmUri,omitempty"`
+	// EnableSoftDelete - Property to specify whether the 'soft delete' functionality is enabled for this managed HSM pool. If it's not set to any value(true or false) when creating new managed HSM pool, it will be set to true by default. Once set to true, it cannot be reverted to false.
+	EnableSoftDelete *bool `json:"enableSoftDelete,omitempty"`
+	// SoftDeleteRetentionInDays - softDelete data retention days. It accepts >=7 and <=90.
+	SoftDeleteRetentionInDays *int32 `json:"softDeleteRetentionInDays,omitempty"`
+	// EnablePurgeProtection - Property specifying whether protection against purge is enabled for this managed HSM pool. Setting this property to true activates protection against purge for this managed HSM pool and its content - only the Managed HSM service may initiate a hard, irrecoverable deletion. The setting is effective only if soft delete is also enabled. Enabling this functionality is irreversible.
+	EnablePurgeProtection *bool `json:"enablePurgeProtection,omitempty"`
+	// CreateMode - The create mode to indicate whether the resource is being created or is being recovered from a deleted resource. Possible values include: 'CreateModeRecover', 'CreateModeDefault'
+	CreateMode CreateMode `json:"createMode,omitempty"`
+	// StatusMessage - READ-ONLY; Resource Status Message.
+	StatusMessage *string `json:"statusMessage,omitempty"`
+	// ProvisioningState - READ-ONLY; Provisioning state. Possible values include: 'ProvisioningStateSucceeded', 'ProvisioningStateProvisioning', 'ProvisioningStateFailed', 'ProvisioningStateUpdating', 'ProvisioningStateDeleting', 'ProvisioningStateActivated', 'ProvisioningStateSecurityDomainRestore', 'ProvisioningStateRestoring'
+	ProvisioningState ProvisioningState `json:"provisioningState,omitempty"`
+}
+
+// MarshalJSON is the custom marshaler for ManagedHsmProperties.
+func (mhp ManagedHsmProperties) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if mhp.TenantID != nil {
+		objectMap["tenantId"] = mhp.TenantID
+	}
+	if mhp.InitialAdminObjectIds != nil {
+		objectMap["initialAdminObjectIds"] = mhp.InitialAdminObjectIds
+	}
+	if mhp.HsmURI != nil {
+		objectMap["hsmUri"] = mhp.HsmURI
+	}
+	if mhp.EnableSoftDelete != nil {
+		objectMap["enableSoftDelete"] = mhp.EnableSoftDelete
+	}
+	if mhp.SoftDeleteRetentionInDays != nil {
+		objectMap["softDeleteRetentionInDays"] = mhp.SoftDeleteRetentionInDays
+	}
+	if mhp.EnablePurgeProtection != nil {
+		objectMap["enablePurgeProtection"] = mhp.EnablePurgeProtection
+	}
+	if mhp.CreateMode != "" {
+		objectMap["createMode"] = mhp.CreateMode
+	}
+	return json.Marshal(objectMap)
+}
+
+// ManagedHsmResource managed HSM resource
+type ManagedHsmResource struct {
+	// ID - READ-ONLY; The Azure Resource Manager resource ID for the managed HSM Pool.
+	ID *string `json:"id,omitempty"`
+	// Name - READ-ONLY; The name of the managed HSM Pool.
+	Name *string `json:"name,omitempty"`
+	// Type - READ-ONLY; The resource type of the managed HSM Pool.
+	Type *string `json:"type,omitempty"`
+	// Location - The supported Azure location where the managed HSM Pool should be created.
+	Location *string `json:"location,omitempty"`
+	// Sku - SKU details
+	Sku *ManagedHsmSku `json:"sku,omitempty"`
+	// Tags - Resource tags
+	Tags map[string]*string `json:"tags"`
+}
+
+// MarshalJSON is the custom marshaler for ManagedHsmResource.
+func (mhr ManagedHsmResource) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if mhr.Location != nil {
+		objectMap["location"] = mhr.Location
+	}
+	if mhr.Sku != nil {
+		objectMap["sku"] = mhr.Sku
+	}
+	if mhr.Tags != nil {
+		objectMap["tags"] = mhr.Tags
+	}
+	return json.Marshal(objectMap)
+}
+
+// ManagedHsmsCreateOrUpdateFuture an abstraction for monitoring and retrieving the results of a long-running
+// operation.
+type ManagedHsmsCreateOrUpdateFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *ManagedHsmsCreateOrUpdateFuture) Result(client ManagedHsmsClient) (mh ManagedHsm, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "keyvault.ManagedHsmsCreateOrUpdateFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("keyvault.ManagedHsmsCreateOrUpdateFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if mh.Response.Response, err = future.GetResult(sender); err == nil && mh.Response.Response.StatusCode != http.StatusNoContent {
+		mh, err = client.CreateOrUpdateResponder(mh.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "keyvault.ManagedHsmsCreateOrUpdateFuture", "Result", mh.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// ManagedHsmsDeleteFuture an abstraction for monitoring and retrieving the results of a long-running
+// operation.
+type ManagedHsmsDeleteFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *ManagedHsmsDeleteFuture) Result(client ManagedHsmsClient) (ar autorest.Response, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "keyvault.ManagedHsmsDeleteFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("keyvault.ManagedHsmsDeleteFuture")
+		return
+	}
+	ar.Response = future.Response()
+	return
+}
+
+// ManagedHsmSku SKU details
+type ManagedHsmSku struct {
+	// Family - SKU Family of the managed HSM Pool
+	Family *string `json:"family,omitempty"`
+	// Name - SKU of the managed HSM Pool. Possible values include: 'StandardB1', 'CustomB32'
+	Name ManagedHsmSkuName `json:"name,omitempty"`
+}
+
+// ManagedHsmsUpdateFuture an abstraction for monitoring and retrieving the results of a long-running
+// operation.
+type ManagedHsmsUpdateFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *ManagedHsmsUpdateFuture) Result(client ManagedHsmsClient) (mh ManagedHsm, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "keyvault.ManagedHsmsUpdateFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("keyvault.ManagedHsmsUpdateFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if mh.Response.Response, err = future.GetResult(sender); err == nil && mh.Response.Response.StatusCode != http.StatusNoContent {
+		mh, err = client.UpdateResponder(mh.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "keyvault.ManagedHsmsUpdateFuture", "Result", mh.Response.Response, "Failure responding to request")
+		}
+	}
+	return
 }
 
 // NetworkRuleSet a set of rules governing the network accessibility of a vault.
@@ -656,8 +766,8 @@ type OperationDisplay struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// OperationListResult result of the request to list Storage operations. It contains a list of operations
-// and a URL link to get the next set of results.
+// OperationListResult result of the request to list Storage operations. It contains a list of operations and a
+// URL link to get the next set of results.
 type OperationListResult struct {
 	autorest.Response `json:"-"`
 	// Value - List of Storage operations supported by the Storage resource provider.
@@ -734,10 +844,15 @@ func (olr OperationListResult) IsEmpty() bool {
 	return olr.Value == nil || len(*olr.Value) == 0
 }
 
+// hasNextLink returns true if the NextLink is not empty.
+func (olr OperationListResult) hasNextLink() bool {
+	return olr.NextLink != nil && len(*olr.NextLink) != 0
+}
+
 // operationListResultPreparer prepares a request to retrieve the next set of results.
 // It returns nil if no more results exist.
 func (olr OperationListResult) operationListResultPreparer(ctx context.Context) (*http.Request, error) {
-	if olr.NextLink == nil || len(to.String(olr.NextLink)) < 1 {
+	if !olr.hasNextLink() {
 		return nil, nil
 	}
 	return autorest.Prepare((&http.Request{}).WithContext(ctx),
@@ -765,11 +880,16 @@ func (page *OperationListResultPage) NextWithContext(ctx context.Context) (err e
 			tracing.EndSpan(ctx, sc, err)
 		}()
 	}
-	next, err := page.fn(ctx, page.olr)
-	if err != nil {
-		return err
+	for {
+		next, err := page.fn(ctx, page.olr)
+		if err != nil {
+			return err
+		}
+		page.olr = next
+		if !next.hasNextLink() || !next.IsEmpty() {
+			break
+		}
 	}
-	page.olr = next
 	return nil
 }
 
@@ -1111,6 +1231,15 @@ type PrivateLinkResourceProperties struct {
 	RequiredZoneNames *[]string `json:"requiredZoneNames,omitempty"`
 }
 
+// MarshalJSON is the custom marshaler for PrivateLinkResourceProperties.
+func (plrp PrivateLinkResourceProperties) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if plrp.RequiredZoneNames != nil {
+		objectMap["requiredZoneNames"] = plrp.RequiredZoneNames
+	}
+	return json.Marshal(objectMap)
+}
+
 // PrivateLinkServiceConnectionState an object that represents the approval state of the private link
 // connection.
 type PrivateLinkServiceConnectionState struct {
@@ -1219,10 +1348,15 @@ func (rlr ResourceListResult) IsEmpty() bool {
 	return rlr.Value == nil || len(*rlr.Value) == 0
 }
 
+// hasNextLink returns true if the NextLink is not empty.
+func (rlr ResourceListResult) hasNextLink() bool {
+	return rlr.NextLink != nil && len(*rlr.NextLink) != 0
+}
+
 // resourceListResultPreparer prepares a request to retrieve the next set of results.
 // It returns nil if no more results exist.
 func (rlr ResourceListResult) resourceListResultPreparer(ctx context.Context) (*http.Request, error) {
-	if rlr.NextLink == nil || len(to.String(rlr.NextLink)) < 1 {
+	if !rlr.hasNextLink() {
 		return nil, nil
 	}
 	return autorest.Prepare((&http.Request{}).WithContext(ctx),
@@ -1250,11 +1384,16 @@ func (page *ResourceListResultPage) NextWithContext(ctx context.Context) (err er
 			tracing.EndSpan(ctx, sc, err)
 		}()
 	}
-	next, err := page.fn(ctx, page.rlr)
-	if err != nil {
-		return err
+	for {
+		next, err := page.fn(ctx, page.rlr)
+		if err != nil {
+			return err
+		}
+		page.rlr = next
+		if !next.hasNextLink() || !next.IsEmpty() {
+			break
+		}
 	}
-	page.rlr = next
 	return nil
 }
 
@@ -1347,6 +1486,15 @@ type VaultAccessPolicyParameters struct {
 	Location *string `json:"location,omitempty"`
 	// Properties - Properties of the access policy
 	Properties *VaultAccessPolicyProperties `json:"properties,omitempty"`
+}
+
+// MarshalJSON is the custom marshaler for VaultAccessPolicyParameters.
+func (vapp VaultAccessPolicyParameters) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if vapp.Properties != nil {
+		objectMap["properties"] = vapp.Properties
+	}
+	return json.Marshal(objectMap)
 }
 
 // VaultAccessPolicyProperties properties of the vault access policy
@@ -1465,10 +1613,15 @@ func (vlr VaultListResult) IsEmpty() bool {
 	return vlr.Value == nil || len(*vlr.Value) == 0
 }
 
+// hasNextLink returns true if the NextLink is not empty.
+func (vlr VaultListResult) hasNextLink() bool {
+	return vlr.NextLink != nil && len(*vlr.NextLink) != 0
+}
+
 // vaultListResultPreparer prepares a request to retrieve the next set of results.
 // It returns nil if no more results exist.
 func (vlr VaultListResult) vaultListResultPreparer(ctx context.Context) (*http.Request, error) {
-	if vlr.NextLink == nil || len(to.String(vlr.NextLink)) < 1 {
+	if !vlr.hasNextLink() {
 		return nil, nil
 	}
 	return autorest.Prepare((&http.Request{}).WithContext(ctx),
@@ -1496,11 +1649,16 @@ func (page *VaultListResultPage) NextWithContext(ctx context.Context) (err error
 			tracing.EndSpan(ctx, sc, err)
 		}()
 	}
-	next, err := page.fn(ctx, page.vlr)
-	if err != nil {
-		return err
+	for {
+		next, err := page.fn(ctx, page.vlr)
+		if err != nil {
+			return err
+		}
+		page.vlr = next
+		if !next.hasNextLink() || !next.IsEmpty() {
+			break
+		}
 	}
-	page.vlr = next
 	return nil
 }
 
@@ -1612,6 +1770,51 @@ type VaultProperties struct {
 	NetworkAcls *NetworkRuleSet `json:"networkAcls,omitempty"`
 	// PrivateEndpointConnections - READ-ONLY; List of private endpoint connections associated with the key vault.
 	PrivateEndpointConnections *[]PrivateEndpointConnectionItem `json:"privateEndpointConnections,omitempty"`
+}
+
+// MarshalJSON is the custom marshaler for VaultProperties.
+func (vp VaultProperties) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if vp.TenantID != nil {
+		objectMap["tenantId"] = vp.TenantID
+	}
+	if vp.Sku != nil {
+		objectMap["sku"] = vp.Sku
+	}
+	if vp.AccessPolicies != nil {
+		objectMap["accessPolicies"] = vp.AccessPolicies
+	}
+	if vp.VaultURI != nil {
+		objectMap["vaultUri"] = vp.VaultURI
+	}
+	if vp.EnabledForDeployment != nil {
+		objectMap["enabledForDeployment"] = vp.EnabledForDeployment
+	}
+	if vp.EnabledForDiskEncryption != nil {
+		objectMap["enabledForDiskEncryption"] = vp.EnabledForDiskEncryption
+	}
+	if vp.EnabledForTemplateDeployment != nil {
+		objectMap["enabledForTemplateDeployment"] = vp.EnabledForTemplateDeployment
+	}
+	if vp.EnableSoftDelete != nil {
+		objectMap["enableSoftDelete"] = vp.EnableSoftDelete
+	}
+	if vp.SoftDeleteRetentionInDays != nil {
+		objectMap["softDeleteRetentionInDays"] = vp.SoftDeleteRetentionInDays
+	}
+	if vp.EnableRbacAuthorization != nil {
+		objectMap["enableRbacAuthorization"] = vp.EnableRbacAuthorization
+	}
+	if vp.CreateMode != "" {
+		objectMap["createMode"] = vp.CreateMode
+	}
+	if vp.EnablePurgeProtection != nil {
+		objectMap["enablePurgeProtection"] = vp.EnablePurgeProtection
+	}
+	if vp.NetworkAcls != nil {
+		objectMap["networkAcls"] = vp.NetworkAcls
+	}
+	return json.Marshal(objectMap)
 }
 
 // VaultsCreateOrUpdateFuture an abstraction for monitoring and retrieving the results of a long-running
