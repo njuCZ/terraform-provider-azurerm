@@ -77,6 +77,8 @@ func resourceArmKeyVaultManagedHardwareSecurityModule() *schema.Resource {
 				ValidateFunc: validation.IsUUID,
 			},
 
+			// https://github.com/Azure/azure-rest-api-specs/issues/11419
+			// field `purge_protection_enabled`, `soft_delete_retention_days` could not be updated
 			"purge_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
