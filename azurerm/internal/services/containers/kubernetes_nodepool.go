@@ -135,6 +135,39 @@ func SchemaDefaultNodePool() *schema.Schema {
 					}, false),
 				},
 
+				"scale_set_priority": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  containerservice.Regular,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(containerservice.Regular),
+						string(containerservice.Spot),
+					}, false),
+				},
+
+				"scale_set_eviction_policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  containerservice.Delete,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(containerservice.Deallocate),
+						string(containerservice.Delete),
+					}, false),
+				},
+
+				"spot_max_price": {
+					Type:         schema.TypeFloat,
+					Optional:     true,
+					Default:      -1,
+					ValidateFunc: validation.FloatAtLeast(-1),
+				},
+
+				"upgrade_max_surge": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
 				"vnet_subnet_id": {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -224,9 +257,9 @@ func ExpandDefaultNodePool(d *schema.ResourceData) (*[]containerservice.ManagedC
 		// since this is the "default" node pool we can assume this is a system node pool
 		Mode: containerservice.System,
 
-		// // TODO: support these in time
-		// ScaleSetEvictionPolicy: "",
-		// ScaleSetPriority:       "",
+		ScaleSetPriority:       containerservice.ScaleSetPriority(raw["scale_set_priority"].(string)),
+		ScaleSetEvictionPolicy: containerservice.ScaleSetEvictionPolicy(raw["scale_set_eviction_policy"].(string)),
+		SpotMaxPrice:           utils.Float(raw["spot_max_price"].(float64)),
 	}
 
 	availabilityZonesRaw := raw["availability_zones"].([]interface{})
@@ -248,6 +281,12 @@ func ExpandDefaultNodePool(d *schema.ResourceData) (*[]containerservice.ManagedC
 	profile.OsDiskType = containerservice.Managed
 	if osDiskType := raw["os_disk_type"].(string); osDiskType != "" {
 		profile.OsDiskType = containerservice.OSDiskType(raw["os_disk_type"].(string))
+	}
+
+	if upgradeMaxSurge := raw["upgrade_max_surge"].(string); upgradeMaxSurge != "" {
+		profile.UpgradeSettings = &containerservice.AgentPoolUpgradeSettings{
+			MaxSurge: utils.String(upgradeMaxSurge),
+		}
 	}
 
 	if vnetSubnetID := raw["vnet_subnet_id"].(string); vnetSubnetID != "" {
@@ -382,6 +421,16 @@ func FlattenDefaultNodePool(input *[]containerservice.ManagedClusterAgentPoolPro
 		osDiskType = agentPool.OsDiskType
 	}
 
+	var spotMaxPrice float64 = -1
+	if agentPool.SpotMaxPrice != nil {
+		spotMaxPrice = *agentPool.SpotMaxPrice
+	}
+
+	upgradeMaxSurge := ""
+	if agentPool.UpgradeSettings != nil && agentPool.UpgradeSettings.MaxSurge != nil {
+		upgradeMaxSurge = *agentPool.UpgradeSettings.MaxSurge
+	}
+
 	vnetSubnetId := ""
 	if agentPool.VnetSubnetID != nil {
 		vnetSubnetId = *agentPool.VnetSubnetID
@@ -411,6 +460,10 @@ func FlattenDefaultNodePool(input *[]containerservice.ManagedClusterAgentPoolPro
 			"node_taints":                  []string{},
 			"os_disk_size_gb":              osDiskSizeGB,
 			"os_disk_type":                 string(osDiskType),
+			"scale_set_priority":           string(agentPool.ScaleSetPriority),
+			"scale_set_eviction_policy":    string(agentPool.ScaleSetEvictionPolicy),
+			"spot_max_price":               spotMaxPrice,
+			"upgrade_max_surge":            upgradeMaxSurge,
 			"tags":                         tags.Flatten(agentPool.Tags),
 			"type":                         string(agentPool.Type),
 			"vm_size":                      string(agentPool.VMSize),

@@ -104,7 +104,37 @@ func resourceArmKubernetesCluster() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"expander": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  string(containerservice.Random),
+							ValidateFunc: validation.StringInSlice([]string{
+								string(containerservice.LeastWaste),
+								string(containerservice.MostPods),
+								string(containerservice.Random),
+							}, false),
+						},
+						"max_empty_bulk_delete": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"max_graceful_termination_sec": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"max_total_unready_percentage": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"new_pod_scale_up_delay": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ok_total_unready_count": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -149,6 +179,16 @@ func resourceArmKubernetesCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+						"skip_nodes_with_local_storage": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"skip_nodes_with_system_pods": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 					},
 				},
@@ -273,6 +313,17 @@ func resourceArmKubernetesCluster() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								string(containerservice.NetworkPolicyCalico),
 								string(containerservice.NetworkPolicyAzure),
+							}, false),
+						},
+
+						"network_mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								string(containerservice.Transparent),
+								string(containerservice.Bridge),
 							}, false),
 						},
 
@@ -547,6 +598,15 @@ func resourceArmKubernetesCluster() *schema.Resource {
 							Optional:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringIsNotEmpty,
+						},
+						"license_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  string(containerservice.None),
+							ValidateFunc: validation.StringInSlice([]string{
+								string(containerservice.None),
+								string(containerservice.WindowsServer),
+							}, false),
 						},
 					},
 				},
@@ -1412,12 +1472,11 @@ func expandKubernetesClusterWindowsProfile(input []interface{}) *containerservic
 	adminUsername := config["admin_username"].(string)
 	adminPassword := config["admin_password"].(string)
 
-	profile := containerservice.ManagedClusterWindowsProfile{
+	return &containerservice.ManagedClusterWindowsProfile{
 		AdminUsername: &adminUsername,
 		AdminPassword: &adminPassword,
+		LicenseType:   containerservice.LicenseType(config["license_type"].(string)),
 	}
-
-	return &profile
 }
 
 func flattenKubernetesClusterWindowsProfile(profile *containerservice.ManagedClusterWindowsProfile, d *schema.ResourceData) []interface{} {
@@ -1440,6 +1499,7 @@ func flattenKubernetesClusterWindowsProfile(profile *containerservice.ManagedClu
 		map[string]interface{}{
 			"admin_password": adminPassword,
 			"admin_username": adminUsername,
+			"license_type":   string(profile.LicenseType),
 		},
 	}
 }
@@ -1453,6 +1513,7 @@ func expandKubernetesClusterNetworkProfile(input []interface{}) (*containerservi
 
 	networkPlugin := config["network_plugin"].(string)
 	networkPolicy := config["network_policy"].(string)
+	networkMode := config["network_mode"].(string)
 	loadBalancerProfileRaw := config["load_balancer_profile"].([]interface{})
 	loadBalancerSku := config["load_balancer_sku"].(string)
 	outboundType := config["outbound_type"].(string)
@@ -1460,6 +1521,7 @@ func expandKubernetesClusterNetworkProfile(input []interface{}) (*containerservi
 	networkProfile := containerservice.NetworkProfileType{
 		NetworkPlugin:   containerservice.NetworkPlugin(networkPlugin),
 		NetworkPolicy:   containerservice.NetworkPolicy(networkPolicy),
+		NetworkMode:     containerservice.NetworkMode(networkMode),
 		LoadBalancerSku: containerservice.LoadBalancerSku(loadBalancerSku),
 		OutboundType:    containerservice.OutboundType(outboundType),
 	}
@@ -1636,6 +1698,7 @@ func flattenKubernetesClusterNetworkProfile(profile *containerservice.NetworkPro
 			"load_balancer_profile": lbProfiles,
 			"network_plugin":        string(profile.NetworkPlugin),
 			"network_policy":        string(profile.NetworkPolicy),
+			"network_mode":          string(profile.NetworkMode),
 			"pod_cidr":              podCidr,
 			"service_cidr":          serviceCidr,
 			"outbound_type":         string(profile.OutboundType),
@@ -1891,9 +1954,29 @@ func flattenKubernetesClusterAutoScalerProfile(profile *containerservice.Managed
 		balanceSimilarNodeGroups = strings.EqualFold(*profile.BalanceSimilarNodeGroups, "true")
 	}
 
+	maxEmptyBulkDelete := ""
+	if profile.MaxEmptyBulkDelete != nil {
+		maxEmptyBulkDelete = *profile.MaxEmptyBulkDelete
+	}
+
 	maxGracefulTerminationSec := ""
 	if profile.MaxGracefulTerminationSec != nil {
 		maxGracefulTerminationSec = *profile.MaxGracefulTerminationSec
+	}
+
+	maxTotalUnreadyPercentage := ""
+	if profile.MaxTotalUnreadyPercentage != nil {
+		maxTotalUnreadyPercentage = *profile.MaxTotalUnreadyPercentage
+	}
+
+	newPodScaleUpDelay := ""
+	if profile.NewPodScaleUpDelay != nil {
+		newPodScaleUpDelay = *profile.NewPodScaleUpDelay
+	}
+
+	okTotalUnreadyCount := ""
+	if profile.OkTotalUnreadyCount != nil {
+		okTotalUnreadyCount = *profile.OkTotalUnreadyCount
 	}
 
 	scaleDownDelayAfterAdd := ""
@@ -1931,10 +2014,25 @@ func flattenKubernetesClusterAutoScalerProfile(profile *containerservice.Managed
 		scanInterval = *profile.ScanInterval
 	}
 
+	skipNodesWithLocalStorage := false
+	if profile.SkipNodesWithLocalStorage != nil {
+		skipNodesWithLocalStorage = strings.EqualFold(*profile.SkipNodesWithLocalStorage, "true")
+	}
+
+	skipNodesWithSystemPods := false
+	if profile.SkipNodesWithSystemPods != nil {
+		skipNodesWithSystemPods = strings.EqualFold(*profile.SkipNodesWithSystemPods, "true")
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"balance_similar_node_groups":      balanceSimilarNodeGroups,
+			"expander":                         string(profile.Expander),
+			"max_empty_bulk_delete":            maxEmptyBulkDelete,
 			"max_graceful_termination_sec":     maxGracefulTerminationSec,
+			"max_total_unready_percentage":     maxTotalUnreadyPercentage,
+			"new_pod_scale_up_delay":           newPodScaleUpDelay,
+			"ok_total_unready_count":           okTotalUnreadyCount,
 			"scale_down_delay_after_add":       scaleDownDelayAfterAdd,
 			"scale_down_delay_after_delete":    scaleDownDelayAfterDelete,
 			"scale_down_delay_after_failure":   scaleDownDelayAfterFailure,
@@ -1942,6 +2040,8 @@ func flattenKubernetesClusterAutoScalerProfile(profile *containerservice.Managed
 			"scale_down_unready":               scaleDownUnreadyTime,
 			"scale_down_utilization_threshold": scaleDownUtilizationThreshold,
 			"scan_interval":                    scanInterval,
+			"skip_nodes_with_local_storage":    skipNodesWithLocalStorage,
+			"skip_nodes_with_system_pods":      skipNodesWithSystemPods,
 		},
 	}
 }
@@ -1965,7 +2065,12 @@ func expandKubernetesClusterAutoScalerProfile(input []interface{}) *containerser
 
 	return &containerservice.ManagedClusterPropertiesAutoScalerProfile{
 		BalanceSimilarNodeGroups:      utils.String(strconv.FormatBool(balanceSimilarNodeGroups)),
+		Expander:                      containerservice.Expander(config["expander"].(string)),
+		MaxEmptyBulkDelete:            utils.String(config["max_empty_bulk_delete"].(string)),
 		MaxGracefulTerminationSec:     utils.String(maxGracefulTerminationSec),
+		MaxTotalUnreadyPercentage:     utils.String(config["max_total_unready_percentage"].(string)),
+		NewPodScaleUpDelay:            utils.String(config["new_pod_scale_up_delay"].(string)),
+		OkTotalUnreadyCount:           utils.String(config["ok_total_unready_count"].(string)),
 		ScaleDownDelayAfterAdd:        utils.String(scaleDownDelayAfterAdd),
 		ScaleDownDelayAfterDelete:     utils.String(scaleDownDelayAfterDelete),
 		ScaleDownDelayAfterFailure:    utils.String(scaleDownDelayAfterFailure),
@@ -1973,5 +2078,7 @@ func expandKubernetesClusterAutoScalerProfile(input []interface{}) *containerser
 		ScaleDownUnreadyTime:          utils.String(scaleDownUnreadyTime),
 		ScaleDownUtilizationThreshold: utils.String(scaleDownUtilizationThreshold),
 		ScanInterval:                  utils.String(scanInterval),
+		SkipNodesWithLocalStorage:     utils.String(strconv.FormatBool(config["skip_nodes_with_local_storage"].(bool))),
+		SkipNodesWithSystemPods:       utils.String(strconv.FormatBool(config["skip_nodes_with_system_pods"].(bool))),
 	}
 }
