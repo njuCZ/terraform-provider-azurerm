@@ -52,85 +52,43 @@ func resourceArmSecurityCenterAssessment() *schema.Resource {
 				ValidateFunc: azure.ValidateResourceID,
 			},
 
-			"description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
+			"status": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"code": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								string(security.Healthy),
+								string(security.NotApplicable),
+								string(security.Unhealthy),
+							}, false),
+						},
 
-			"display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
+						"cause": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
 
-			"assessment_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  string(security.CustomerManaged),
-				ValidateFunc: validation.StringInSlice([]string{
-					string(security.CustomerManaged),
-				}, false),
-			},
-
-			"severity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  string(security.SeverityMedium),
-				ValidateFunc: validation.StringInSlice([]string{
-					string(security.SeverityLow),
-					string(security.SeverityMedium),
-					string(security.SeverityHigh),
-				}, false),
-			},
-
-			"implementation_effort": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(security.ImplementationEffortLow),
-					string(security.ImplementationEffortModerate),
-					string(security.ImplementationEffortHigh),
-				}, false),
-			},
-
-			"is_preview": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"remediation_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-
-			"threats": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"AccountBreach",
-						"DataExfiltration",
-						"DataSpillage",
-						"MaliciousInsider",
-						"ElevationOfPrivilege",
-						"ThreatResistance",
-						"MissingCoverage",
-						"DenialOfService",
-					}, false),
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+					},
 				},
 			},
 
-			"user_impact": {
-				Type:     schema.TypeString,
+			"additional_data": {
+				Type:     schema.TypeMap,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(security.UserImpactLow),
-					string(security.UserImpactModerate),
-					string(security.UserImpactHigh),
-				}, false),
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -155,39 +113,18 @@ func resourceArmSecurityCenterAssessmentCreateUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	params := security.Assessment{
+	assessment := security.Assessment{
 		AssessmentProperties: &security.AssessmentProperties{
-			Status:
-
+			AdditionalData: utils.ExpandMapStringPtrString(d.Get("additional_data").(map[string]interface{})),
+			ResourceDetails: &security.AzureResourceDetails{
+				Source: security.SourceAzure,
+			},
+			Status: expandSecurityCenterAssessmentStatus(d.Get("status").([]interface{})),
 		},
 	}
 
-	if v, ok := d.GetOk("threats"); ok {
-		threats := make([]security.Threats, 0)
-		for _, item := range *(utils.ExpandStringSlice(v.(*schema.Set).List())) {
-			threats = append(threats, (security.Threats)(item))
-		}
-		params.AssessmentProperties.Threats = &threats
-	}
-
-	if v, ok := d.GetOk("implementation_effort"); ok {
-		params.AssessmentProperties.ImplementationEffort = security.ImplementationEffort(v.(string))
-	}
-
-	if v, ok := d.GetOk("is_preview"); ok {
-		params.AssessmentProperties.Preview = utils.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("remediation_description"); ok {
-		params.AssessmentProperties.RemediationDescription = utils.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("user_impact"); ok {
-		params.AssessmentProperties.UserImpact = security.UserImpact(v.(string))
-	}
-
-	if _, err := client.CreateOrUpdate(ctx, id.TargetResourceID, id.Name, params); err != nil {
-		return fmt.Errorf("creating/updating Security Center Assessment  %q : %+v", name, err)
+	if _, err := client.CreateOrUpdate(ctx, id.TargetResourceID, id.Name, assessment); err != nil {
+		return fmt.Errorf("creating/updating Security Center Assessment %q (target resource id %q) : %+v", id.Name, id.TargetResourceID, err)
 	}
 
 	d.SetId(id.ID())
@@ -205,35 +142,23 @@ func resourceArmSecurityCenterAssessmentRead(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	resp, err := client.GetInSubscription(ctx, id.AssessmentName)
+	resp, err := client.Get(ctx, id.TargetResourceID, id.Name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[INFO] security Center Assessment  %q does not exist - removing from state", d.Id())
+			log.Printf("[INFO] security Center Assessment %q does not exist - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving Security Center Assessment  %q : %+v", id.AssessmentName, err)
+		return fmt.Errorf("retrieving Security Center Assessment %q (target resource id %q) : %+v", id.Name, id.TargetResourceID, err)
 	}
 
-	d.Set("name", id.AssessmentName)
-
+	d.Set("name", id.Name)
+	d.Set("target_resource_id", id.TargetResourceID)
 	if props := resp.AssessmentProperties; props != nil {
-		d.Set("assessment_type", props.AssessmentType)
-		d.Set("description", props.Description)
-		d.Set("display_name", props.DisplayName)
-		d.Set("severity", props.Severity)
-		d.Set("implementation_effort", props.ImplementationEffort)
-		d.Set("is_preview", props.Preview)
-		d.Set("remediation_description", props.RemediationDescription)
-		d.Set("user_impact", props.UserImpact)
-
-		threats := make([]string, 0)
-		if props.Threats != nil {
-			for _, item := range *props.Threats {
-				threats = append(threats, (string)(item))
-			}
+		d.Set("additional_data", utils.FlattenMapStringPtrString(props.AdditionalData))
+		if err := d.Set("status", flattenSecurityCenterAssessmentStatus(props.Status)); err != nil {
+			return fmt.Errorf("setting `status`: %s", err)
 		}
-		d.Set("threats", utils.FlattenStringSlice(&threats))
 	}
 
 	return nil
@@ -249,9 +174,44 @@ func resourceArmSecurityCenterAssessmentDelete(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	if _, err := client.DeleteInSubscription(ctx, id.AssessmentName); err != nil {
-		return fmt.Errorf("deleting Security Center Assessment  %q : %+v", id.AssessmentName, err)
+	if _, err := client.Delete(ctx, id.TargetResourceID, id.Name); err != nil {
+		return fmt.Errorf("deleting Security Center Assessment  %q (target resource id %q) : %+v", id.Name, id.TargetResourceID, err)
 	}
 
 	return nil
+}
+
+func expandSecurityCenterAssessmentStatus(input []interface{}) *security.AssessmentStatus {
+	if len(input) == 0 || input[0] == nil {
+		return nil
+	}
+
+	v := input[0].(map[string]interface{})
+	return &security.AssessmentStatus{
+		Code:        security.AssessmentStatusCode(v["code"].(string)),
+		Cause:       utils.String(v["cause"].(string)),
+		Description: utils.String(v["description"].(string)),
+	}
+}
+
+func flattenSecurityCenterAssessmentStatus(input *security.AssessmentStatus) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+
+	var cause, description string
+	if input.Cause != nil {
+		cause = *input.Cause
+	}
+	if input.Description != nil {
+		description = *input.Description
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"code":        string(input.Code),
+			"cause":       cause,
+			"description": description,
+		},
+	}
 }
