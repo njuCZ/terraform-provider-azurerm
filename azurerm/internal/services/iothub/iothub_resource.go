@@ -565,12 +565,23 @@ func resourceIotHubCreateUpdate(d *schema.ResourceData, meta interface{}) error 
 		props.Properties.MinTLSVersion = utils.String(v.(string))
 	}
 
-	future, err := client.CreateOrUpdate(ctx, resourceGroup, name, props, "")
+	_, err = client.CreateOrUpdate(ctx, resourceGroup, name, props, "")
 	if err != nil {
 		return fmt.Errorf("Error creating/updating IotHub %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
-	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
+	timeout := schema.TimeoutUpdate
+	if d.IsNewResource() {
+		timeout = schema.TimeoutCreate
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"Activating", "Transitioning"},
+		Target:  []string{"Succeeded"},
+		Refresh: iothubStateStatusCodeCreateUpdateRefreshFunc(ctx, client, resourceGroup, name),
+		Timeout: d.Timeout(timeout),
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("Error waiting for the completion of the creating/updating of IotHub %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
@@ -720,6 +731,27 @@ func waitForIotHubToBeDeleted(ctx context.Context, client *devices.IotHubResourc
 	}
 
 	return nil
+}
+
+func iothubStateStatusCodeCreateUpdateRefreshFunc(ctx context.Context, client *devices.IotHubResourceClient, resourceGroup, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		res, err := client.Get(ctx, resourceGroup, name)
+
+		log.Printf("Retrieving IoTHub %q (Resource Group %q) returned Status %d", resourceGroup, name, res.StatusCode)
+
+		if err != nil {
+			if utils.ResponseWasNotFound(res.Response) {
+				return res, "NotFound", nil
+			}
+			return nil, "", fmt.Errorf("polling for the Provisioning State of the IotHub %q (RG: %q): %+v", name, resourceGroup, err)
+		}
+
+		if res.Properties == nil || res.Properties.ProvisioningState == nil {
+			return res, "", fmt.Errorf("polling for the Provisioning State of the IotHub %q (RG: %q): %+v", name, resourceGroup, err)
+		}
+
+		return res, *res.Properties.ProvisioningState, nil
+	}
 }
 
 func iothubStateStatusCodeRefreshFunc(ctx context.Context, client *devices.IotHubResourceClient, resourceGroup, name string) resource.StateRefreshFunc {
