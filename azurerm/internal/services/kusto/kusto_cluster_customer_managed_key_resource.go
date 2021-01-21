@@ -15,6 +15,7 @@ import (
 	keyVaultValidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/keyvault/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/kusto/parse"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/kusto/validate"
+	azSchema "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tf/schema"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
@@ -26,10 +27,10 @@ func resourceKustoClusterCustomerManagedKey() *schema.Resource {
 		Update: resourceKustoClusterCustomerManagedKeyCreateUpdate,
 		Delete: resourceKustoClusterCustomerManagedKeyDelete,
 
-		// TODO: this needs a custom ID validating importer
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: azSchema.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := parse.ClusterID(id)
+			return err
+		}),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -62,6 +63,12 @@ func resourceKustoClusterCustomerManagedKey() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
+			"user_identity": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}
@@ -144,6 +151,10 @@ func resourceKustoClusterCustomerManagedKeyCreateUpdate(d *schema.ResourceData, 
 		},
 	}
 
+	if v, ok := d.GetOk("user_identity"); ok {
+		props.ClusterProperties.KeyVaultProperties.UserIdentity = utils.String(v.(string))
+	}
+
 	future, err := clusterClient.Update(ctx, clusterID.ResourceGroup, clusterID.Name, props)
 	if err != nil {
 		return fmt.Errorf("Error updating Customer Managed Key for Kusto Cluster %q (Resource Group %q): %+v", clusterID.Name, clusterID.ResourceGroup, err)
@@ -219,7 +230,9 @@ func resourceKustoClusterCustomerManagedKeyRead(d *schema.ResourceData, meta int
 	d.Set("key_vault_id", keyVaultID)
 	d.Set("key_name", keyName)
 	d.Set("key_version", keyVersion)
-
+	if props != nil {
+		d.Set("user_identity", props.UserIdentity)
+	}
 	return nil
 }
 
