@@ -1,3 +1,406 @@
+# private branch for Spring Cloud Service Virtual Network Integration
+
+## Instruction
+This feature is based on azurerm provider 2.32.0
+
+to build a private binary, you should 
+- checkout this repo and switch to current branch
+- `make build`
+
+If you want to cross compile for other OS platform, you could change the file: `GNUmakefile`. In the line 23, add cross compile parameters
+
+## how to use private build binary
+please See https://www.terraform.io/docs/extend/how-terraform-works.html#plugin-locations for more details
+
+## verify
+The way to verify you are using the private build version is to check the debug log of terraform
+
+- you shall see: `[DEBUG] plugin: starting plugin: path=<plugin location>/terraform-provider-azurerm`
+- debug log should contain following information
+```
+[INFO] *************************************************************************************
+[INFO] ***** Using Terraform Azure provider with Spring Cloud Service Vnet Integration *****
+[INFO] *************************************************************************************
+```
+
+## sample usage (spring cloud vnet, private dns zone and augment route table rules)
+```hcl
+provider "azurerm" {
+  features {}
+}
+
+data "azurerm_resource_group" "test" {
+  name = "cz"
+}
+
+resource "azurerm_virtual_network" "test" {
+  name                = "testvnet"
+  address_space       = ["10.1.0.0/16"]
+  location            = data.azurerm_resource_group.test.location
+  resource_group_name = data.azurerm_resource_group.test.name
+}
+
+resource "azurerm_subnet" "test1" {
+  name                 = "internal1"
+  resource_group_name  = data.azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefix       = "10.1.0.0/24"
+}
+
+resource "azurerm_subnet" "test2" {
+  name                 = "internal2"
+  resource_group_name  = data.azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefix       = "10.1.1.0/24"
+}
+
+data "azuread_service_principal" "test" {
+  display_name = "Azure Spring Cloud Resource Provider"
+}
+
+resource "azurerm_role_assignment" "test" {
+  scope                = azurerm_virtual_network.test.id
+  role_definition_name = "Owner"
+  principal_id         = data.azuread_service_principal.test.object_id
+}
+
+resource "azurerm_application_insights" "test" {
+  name                = "tf-test-appinsights"
+  location            = data.azurerm_resource_group.test.location
+  resource_group_name = data.azurerm_resource_group.test.name
+  application_type    = "web"
+}
+
+resource "azurerm_spring_cloud_service" "test" {
+  name                = "sc-cz"
+  resource_group_name = data.azurerm_resource_group.test.name
+  location            = data.azurerm_resource_group.test.location
+  
+  network {
+    app_subnet_id             = azurerm_subnet.test1.id
+    service_runtime_subnet_id = azurerm_subnet.test2.id
+    cidr_ranges               = ["10.4.0.0/16", "10.5.0.0/16", "10.3.0.1/16"]
+  }
+
+  trace {
+    instrumentation_key = azurerm_application_insights.test.instrumentation_key
+  }
+
+  depends_on = [azurerm_role_assignment.test]
+}
+
+output "private_address" {
+  value = azurerm_spring_cloud_service.test.service_runtime_lb_private_address
+}
+
+output "app_route_table_id" {
+  value = azurerm_spring_cloud_service.test.app_subnet_route_table_id
+}
+
+output "app_route_table_name" {
+  value = azurerm_spring_cloud_service.test.app_subnet_route_table_name
+}
+
+output "app_route_table_resource_group" {
+  value = azurerm_spring_cloud_service.test.app_subnet_route_table_resource_group
+}
+
+output "service_runtime_route_table_id" {
+  value = azurerm_spring_cloud_service.test.service_runtime_subnet_route_table_id
+}
+
+output "service_runtime_route_table_name" {
+  value = azurerm_spring_cloud_service.test.service_runtime_subnet_route_table_name
+}
+
+output "service_runtime_route_table_resource_group" {
+  value = azurerm_spring_cloud_service.test.service_runtime_subnet_route_table_resource_group
+}
+
+resource "azurerm_private_dns_zone" "test" {
+  name                = "private.azuremicroservices.io"
+  resource_group_name = azurerm_resource_group.test.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "test" {
+  name                  = "azure-spring-cloud-dns-link"
+  resource_group_name   = azurerm_resource_group.test.name
+  private_dns_zone_name = azurerm_private_dns_zone.test.name
+  virtual_network_id    = azurerm_virtual_network.test.id
+}
+
+resource "azurerm_private_dns_a_record" "test" {
+  name                = "*"
+  zone_name           = azurerm_private_dns_zone.test.name
+  resource_group_name = azurerm_resource_group.test.name
+  ttl                 = 300
+  records             = [azurerm_spring_cloud_service.test.service_runtime_lb_private_address]
+}
+
+resource "azurerm_route" "test" {
+  name                = "test"
+  resource_group_name = azurerm_spring_cloud_service.test.app_subnet_route_table_resource_group
+  route_table_name    = azurerm_spring_cloud_service.test.app_subnet_route_table_name
+  address_prefix      = "10.1.0.0/16"
+  next_hop_type       = "vnetlocal"
+}
+```
+
+## sample usage (create app, deployment, active_deployment)
+```
+resource "azurerm_spring_cloud_app" "test" {
+  name                = "app1"
+  resource_group_name = azurerm_spring_cloud_service.test.resource_group_name
+  service_name        = azurerm_spring_cloud_service.test.name
+  is_public           = true
+  https_only          = true
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  persistent_disk {
+    size_in_gb = 50
+    mount_path = "/persistent"
+  }
+}
+
+resource "azurerm_spring_cloud_java_deployment" "test" {
+  name                = "deploy1"
+  spring_cloud_app_id = azurerm_spring_cloud_app.test.id
+  cpu                 = 2
+  memory_in_gb        = 4
+  instance_count      = 2
+  jvm_options         = "-XX:+PrintGC"
+  runtime_version     = "Java_8"
+
+  env = {
+    "Env" : "Staging"
+  }
+}
+
+resource "azurerm_spring_cloud_active_deployment" "test" {
+  spring_cloud_app_id = azurerm_spring_cloud_app.test.id
+  deployment_name     = azurerm_spring_cloud_java_deployment.test.name
+}
+```
+
+## sample usage (app access key vault secret)
+```
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "test" {
+  name                = "key-vault-test-cz"
+  location            = data.azurerm_resource_group.test.location
+  resource_group_name = data.azurerm_resource_group.test.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+}
+
+resource "azurerm_key_vault_access_policy" "test" {
+  key_vault_id = azurerm_key_vault.test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  secret_permissions      = ["get", "set", "delete", "list"]
+  certificate_permissions = ["create", "delete", "get", "update", "list"]
+}
+
+resource "azurerm_key_vault_access_policy" "test1" {
+  key_vault_id = azurerm_key_vault.test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_spring_cloud_app.test.identity.0.principal_id
+
+  secret_permissions = ["get", "list"]
+}
+```
+
+## sample usage (spring cloud certificate)
+```
+data "azurerm_client_config" "current" {}
+
+data "azuread_service_principal" "test" {
+  display_name = "Azure Spring Cloud Domain-Management"
+}
+
+resource "azurerm_key_vault" "test" {
+  name                = "key-vault-test-cz"
+  location            = data.azurerm_resource_group.test.location
+  resource_group_name = data.azurerm_resource_group.test.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+}
+
+resource "azurerm_key_vault_access_policy" "test" {
+  key_vault_id = azurerm_key_vault.test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  secret_permissions      = ["get", "set", "delete", "list"]
+  certificate_permissions = ["create", "delete", "get", "update", "list"]
+}
+
+resource "azurerm_key_vault_access_policy" "test1" {
+  key_vault_id = azurerm_key_vault.test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azuread_service_principal.test.object_id
+
+  secret_permissions = ["get", "list"]
+  certificate_permissions = ["get", "list"]
+}
+
+resource "azurerm_key_vault_certificate" "test" {
+  name         = "acctestcertcz"
+  key_vault_id = azurerm_key_vault.test.id
+
+  certificate_policy {
+    issuer_parameters {
+      name = "Self"
+    }
+
+    key_properties {
+      exportable = true
+      key_size   = 2048
+      key_type   = "RSA"
+      reuse_key  = true
+    }
+
+    lifetime_action {
+      action {
+        action_type = "AutoRenew"
+      }
+
+      trigger {
+        days_before_expiry = 30
+      }
+    }
+
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
+
+    x509_certificate_properties {
+      key_usage = [
+        "cRLSign",
+        "dataEncipherment",
+        "digitalSignature",
+        "keyAgreement",
+        "keyCertSign",
+        "keyEncipherment",
+      ]
+
+      subject            = "CN=*.azdmss-test.net"
+      subject_alternative_names {
+        dns_names = ["*.azdmss-test.net"]
+      }
+      validity_in_months = 12
+    }
+  }
+}
+
+resource "azurerm_spring_cloud_certificate" "test" {
+  name                     = "acctest-scc-cz"
+  resource_group_name      = azurerm_spring_cloud_service.test.resource_group_name
+  service_name             = azurerm_spring_cloud_service.test.name
+  key_vault_certificate_id = azurerm_key_vault_certificate.test.id
+}
+```
+
+## sample usage (custom domain)
+```
+resource "azurerm_spring_cloud_custom_domain" "test" {
+  name                = "tf-test.azdmss-test.net"
+  spring_cloud_app_id = azurerm_spring_cloud_app.test.id
+  cert_name           = azurerm_spring_cloud_certificate.test.name
+  thumbprint          = azurerm_spring_cloud_certificate.test.thumbprint
+}
+```
+
+## sample usage (autoscale)
+```
+resource "azurerm_monitor_autoscale_setting" "test" {
+  name                = "acctestautoscale-cz"
+  resource_group_name = data.azurerm_resource_group.test.name
+  location            = data.azurerm_resource_group.test.location
+  target_resource_id  = azurerm_spring_cloud_java_deployment.test.id
+  enabled             = true
+  profile {
+    name = "metricRules"
+    capacity {
+      default = 1
+      minimum = 1
+      maximum = 2
+    }
+    rule {
+      metric_trigger {
+        dimensions {
+          name     = "AppName"
+          operator = "Equals"
+          values   = [azurerm_spring_cloud_app.test.name]
+        }
+
+        dimensions {
+          name     = "Deployment"
+          operator = "Equals"
+          values   = [azurerm_spring_cloud_java_deployment.test.name]
+        }
+
+        metric_name        = "AppCpuUsage"
+        metric_namespace   = "microsoft.appplatform/spring"
+        metric_resource_id = azurerm_spring_cloud_service.test.id
+        time_grain         = "PT1M"
+        statistic          = "Average"
+        time_window        = "PT5M"
+        time_aggregation   = "Average"
+        operator           = "GreaterThan"
+        threshold          = 75
+      }
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = 1
+        cooldown  = "PT1M"
+      }
+    }
+  }
+}
+```
+
+## sample usage (config server)
+```
+resource "azurerm_spring_cloud_config_server" "test" {
+  spring_cloud_service_id = azurerm_spring_cloud_service.test.id
+  uri                     = "https://github.com/Azure-Samples/piggymetrics"
+  label                   = "config"
+  search_paths            = ["dir1", "dir4"]
+
+  repository {
+    name         = "repo1"
+    uri          = "https://github.com/Azure-Samples/piggymetrics"
+    label        = "config"
+    search_paths = ["dir1", "dir2"]
+    http_basic_auth {
+      username = "username"
+      password = "password"
+    }
+  }
+
+  repository {
+    name         = "repo2"
+    uri          = "git@bitbucket.org:Azure-Samples/piggymetrics.git"
+    label        = "config"
+    search_paths = ["dir1", "dir2"]
+
+    ssh_auth {
+      private_key                      = file("testdata/private_key")
+      host_key                         = file("testdata/host_key")
+      host_key_algorithm               = "ssh-rsa"
+      strict_host_key_checking_enabled = false
+    }
+  }
+}
+```
+
 # Terraform Provider for Azure (Resource Manager)
 
 Version 2.x of the AzureRM Provider requires Terraform 0.12.x and later.
