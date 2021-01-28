@@ -119,7 +119,7 @@ func (r SpringCloudConfigServerResource) Exists(ctx context.Context, clients *cl
 		return nil, fmt.Errorf("unable to read Spring Cloud Service %q (Resource Group %q): %+v", id.SpringName, id.ResourceGroup, err)
 	}
 
-	return utils.Bool(resp.Properties != nil && resp.Properties != nil && resp.Properties.ConfigServer != nil && resp.Properties.ConfigServer.GitProperty != nil), nil
+	return utils.Bool(resp.Properties != nil && resp.Properties.ConfigServer != nil && resp.Properties.ConfigServer.GitProperty != nil), nil
 }
 
 func (r SpringCloudConfigServerResource) basic(data acceptance.TestData) string {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/services/appplatform/mgmt/2020-07-01/appplatform"
+	"github.com/Azure/azure-sdk-for-go/services/preview/appplatform/mgmt/2020-11-01-preview/appplatform"
 	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -208,6 +208,12 @@ func resourceSpringCloudService() *schema.Resource {
 						"instrumentation_key": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+
+						"sample_rate": {
+							Type:         schema.TypeFloat,
+							Optional:     true,
+							ValidateFunc: validation.FloatBetween(0, 100),
 						},
 					},
 				},
@@ -686,6 +692,7 @@ func expandSpringCloudTrace(input []interface{}) *appplatform.MonitoringSettingP
 	return &appplatform.MonitoringSettingProperties{
 		TraceEnabled:                  utils.Bool(true),
 		AppInsightsInstrumentationKey: utils.String(v["instrumentation_key"].(string)),
+		AppInsightsSamplingRate:       utils.Float(v["sample_rate"].(float64)),
 	}
 }
 
@@ -893,11 +900,15 @@ func flattenSpringCloudTrace(input *appplatform.MonitoringSettingProperties) []i
 
 	enabled := false
 	instrumentationKey := ""
+	samplingRate := 0.0
 	if input.TraceEnabled != nil {
 		enabled = *input.TraceEnabled
 	}
 	if input.AppInsightsInstrumentationKey != nil {
 		instrumentationKey = *input.AppInsightsInstrumentationKey
+	}
+	if input.AppInsightsSamplingRate != nil {
+		samplingRate = *input.AppInsightsSamplingRate
 	}
 
 	if !enabled {
@@ -907,6 +918,7 @@ func flattenSpringCloudTrace(input *appplatform.MonitoringSettingProperties) []i
 	return []interface{}{
 		map[string]interface{}{
 			"instrumentation_key": instrumentationKey,
+			"sample_rate":         samplingRate,
 		},
 	}
 }
