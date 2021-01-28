@@ -15,6 +15,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/location"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/network"
+	networkParse "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/network/parse"
 	networkValidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/network/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/springcloud/parse"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/springcloud/validate"
@@ -219,6 +221,41 @@ func resourceSpringCloudService() *schema.Resource {
 				},
 			},
 
+			"service_runtime_lb_private_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"app_subnet_route_table_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"app_subnet_route_table_resource_group": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"app_subnet_route_table_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"service_runtime_subnet_route_table_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"service_runtime_subnet_route_table_resource_group": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"service_runtime_subnet_route_table_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tags.Schema(),
 		},
 	}
@@ -405,6 +442,49 @@ func resourceSpringCloudServiceRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if props := resp.Properties; props != nil {
+		if props.NetworkProfile != nil && props.NetworkProfile.ServiceRuntimeSubnetID != nil && props.NetworkProfile.AppSubnetID != nil {
+			lbClient := meta.(*clients.Client).LoadBalancers.LoadBalancersClient
+			subnetClient := meta.(*clients.Client).Network.SubnetsClient
+
+			lbResp, err := lbClient.Get(ctx, *resp.Properties.NetworkProfile.ServiceRuntimeNetworkResourceGroup, "kubernetes-internal", "")
+			if err != nil {
+				return nil
+			}
+			privateIpAddress := ""
+			for _, config := range *lbResp.LoadBalancerPropertiesFormat.FrontendIPConfigurations {
+				if feipProps := config.FrontendIPConfigurationPropertiesFormat; feipProps != nil {
+					if ip := feipProps.PrivateIPAddress; ip != nil {
+						if privateIpAddress == "" {
+							privateIpAddress = *feipProps.PrivateIPAddress
+						}
+					}
+				}
+			}
+			d.Set("service_runtime_lb_private_address", privateIpAddress)
+
+			subnetId, _ := networkParse.SubnetID(*resp.Properties.NetworkProfile.AppSubnetID)
+			subnetResp, err := subnetClient.Get(ctx, subnetId.ResourceGroup, subnetId.VirtualNetworkName, subnetId.Name, "")
+			if err != nil {
+				return nil
+			}
+			d.Set("app_subnet_route_table_id", subnetResp.SubnetPropertiesFormat.RouteTable.ID)
+			if id, err := network.ParseRouteTableID(*subnetResp.SubnetPropertiesFormat.RouteTable.ID); err == nil {
+				d.Set("app_subnet_route_table_resource_group", id.ResourceGroup)
+				d.Set("app_subnet_route_table_name", id.Name)
+			}
+
+			serviceSubnetId, _ := networkParse.SubnetID(*resp.Properties.NetworkProfile.ServiceRuntimeSubnetID)
+			serviceSubnetResp, err := subnetClient.Get(ctx, serviceSubnetId.ResourceGroup, serviceSubnetId.VirtualNetworkName, serviceSubnetId.Name, "")
+			if err != nil {
+				return nil
+			}
+			d.Set("service_runtime_subnet_route_table_id", serviceSubnetResp.SubnetPropertiesFormat.RouteTable.ID)
+			if id, err := network.ParseRouteTableID(*serviceSubnetResp.SubnetPropertiesFormat.RouteTable.ID); err == nil {
+				d.Set("service_runtime_subnet_route_table_resource_group", id.ResourceGroup)
+				d.Set("service_runtime_subnet_route_table_name", id.Name)
+			}
+		}
+
 		if err := d.Set("network", flattenSpringCloudNetwork(props.NetworkProfile)); err != nil {
 			return fmt.Errorf("setting `network`: %+v", err)
 		}
