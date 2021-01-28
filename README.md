@@ -1,7 +1,7 @@
 # private branch for Spring Cloud Service Virtual Network Integration
 
 ## Instruction
-This feature is based on azurerm provider 2.32.0
+This feature is based on azurerm provider 2.45.0
 
 to build a private binary, you should 
 - checkout this repo and switch to current branch
@@ -84,6 +84,7 @@ resource "azurerm_spring_cloud_service" "test" {
 
   trace {
     instrumentation_key = azurerm_application_insights.test.instrumentation_key
+    sample_rate = 10
   }
 
   depends_on = [azurerm_role_assignment.test]
@@ -174,7 +175,7 @@ resource "azurerm_spring_cloud_java_deployment" "test" {
   jvm_options         = "-XX:+PrintGC"
   runtime_version     = "Java_8"
 
-  env = {
+  environment_variables = {
     "Env" : "Staging"
   }
 }
