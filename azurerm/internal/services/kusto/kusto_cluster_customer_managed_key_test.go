@@ -97,9 +97,6 @@ func TestAccKustoClusterCustomerManagedKey_userIdentity(t *testing.T) {
 			Config: r.userIdentity(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("key_vault_id").Exists(),
-				check.That(data.ResourceName).Key("key_name").Exists(),
-				check.That(data.ResourceName).Key("key_version").Exists(),
 			),
 		},
 		data.ImportStep(),
@@ -218,6 +215,28 @@ resource "azurerm_resource_group" "test" {
   location = "%s"
 }
 
+resource "azurerm_user_assigned_identity" "test" {
+  name                = "acctest%s"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+}
+
+resource "azurerm_kusto_cluster" "test" {
+  name                = "acctestkc%s"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+
+  sku {
+    name     = "Dev(No SLA)_Standard_D11_v2"
+    capacity = 1
+  }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.test.id]
+  }
+}
+
 resource "azurerm_key_vault" "test" {
   name                     = "acctestkv%s"
   location                 = azurerm_resource_group.test.location
@@ -230,8 +249,8 @@ resource "azurerm_key_vault" "test" {
 
 resource "azurerm_key_vault_access_policy" "cluster" {
   key_vault_id = azurerm_key_vault.test.id
-  tenant_id    = azurerm_kusto_cluster.test.identity.0.tenant_id
-  object_id    = azurerm_kusto_cluster.test.identity.0.principal_id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_user_assigned_identity.test.principal_id
 
   key_permissions = ["get", "unwrapkey", "wrapkey"]
 }
@@ -251,7 +270,7 @@ resource "azurerm_key_vault_access_policy" "client" {
   ]
 }
 
-resource "azurerm_key_vault_key" "first" {
+resource "azurerm_key_vault_key" "test" {
   name         = "test"
   key_vault_id = azurerm_key_vault.test.id
   key_type     = "RSA"
@@ -264,30 +283,14 @@ resource "azurerm_key_vault_key" "first" {
   ]
 }
 
-resource "azurerm_kusto_cluster" "test" {
-  name                = "acctestkc%s"
-  location            = azurerm_resource_group.test.location
-  resource_group_name = azurerm_resource_group.test.name
-
-  sku {
-    name     = "Dev(No SLA)_Standard_D11_v2"
-    capacity = 1
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
-
-
-
 resource "azurerm_kusto_cluster_customer_managed_key" "test" {
-  cluster_id   = azurerm_kusto_cluster.test.id
-  key_vault_id = azurerm_key_vault.test.id
-  key_name     = azurerm_key_vault_key.second.name
-  key_version  = azurerm_key_vault_key.second.version
+  cluster_id    = azurerm_kusto_cluster.test.id
+  key_vault_id  = azurerm_key_vault.test.id
+  key_name      = azurerm_key_vault_key.test.name
+  key_version   = azurerm_key_vault_key.test.version
+  user_identity = azurerm_user_assigned_identity.test.principal_id
 }
-`, data)
+`, data.RandomInteger, data.Locations.Primary, data.RandomString, data.RandomString, data.RandomString)
 }
 
 func (KustoClusterCustomerManagedKeyResource) template(data acceptance.TestData) string {

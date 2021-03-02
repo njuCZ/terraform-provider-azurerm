@@ -15,6 +15,7 @@ import (
 	keyVaultValidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/keyvault/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/kusto/parse"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/kusto/validate"
+	msiValidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/msi/validate"
 	azSchema "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tf/schema"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
@@ -68,7 +69,7 @@ func resourceKustoClusterCustomerManagedKey() *schema.Resource {
 			"user_identity": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: msiValidate.UserAssignedIdentityID,
 			},
 		},
 	}
@@ -153,6 +154,7 @@ func resourceKustoClusterCustomerManagedKeyCreateUpdate(d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("user_identity"); ok {
 		props.ClusterProperties.KeyVaultProperties.UserIdentity = utils.String(v.(string))
+		//props.Identity = cluster.Identity
 	}
 
 	future, err := clusterClient.Update(ctx, clusterID.ResourceGroup, clusterID.Name, props)
