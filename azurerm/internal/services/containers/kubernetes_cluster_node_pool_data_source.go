@@ -156,7 +156,7 @@ func dataSourceKubernetesClusterNodePool() *schema.Resource {
 }
 
 func dataSourceKubernetesClusterNodePoolRead(d *schema.ResourceData, meta interface{}) error {
-	clustersClient := meta.(*clients.Client).Containers.KubernetesClustersClient
+	clustersClient := meta.(*clients.Client).Containers.NewKubernetesClustersClient(nil)
 	poolsClient := meta.(*clients.Client).Containers.AgentPoolsClient
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()

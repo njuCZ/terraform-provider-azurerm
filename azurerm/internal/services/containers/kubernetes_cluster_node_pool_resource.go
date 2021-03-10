@@ -232,7 +232,7 @@ func resourceKubernetesClusterNodePool() *schema.Resource {
 
 func resourceKubernetesClusterNodePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	containersClient := meta.(*clients.Client).Containers
-	clustersClient := containersClient.KubernetesClustersClient
+	clustersClient := containersClient.NewKubernetesClustersClient(nil)
 	poolsClient := containersClient.AgentPoolsClient
 	ctx, cancel := timeouts.ForCreate(meta.(*clients.Client).StopContext, d)
 	defer cancel()
@@ -569,7 +569,7 @@ func resourceKubernetesClusterNodePoolUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceKubernetesClusterNodePoolRead(d *schema.ResourceData, meta interface{}) error {
-	clustersClient := meta.(*clients.Client).Containers.KubernetesClustersClient
+	clustersClient := meta.(*clients.Client).Containers.NewKubernetesClustersClient(nil)
 	poolsClient := meta.(*clients.Client).Containers.AgentPoolsClient
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()

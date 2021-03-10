@@ -546,7 +546,7 @@ func dataSourceKubernetesCluster() *schema.Resource {
 }
 
 func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.Client).Containers.KubernetesClustersClient
+	client := meta.(*clients.Client).Containers.NewKubernetesClustersClient(nil)
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 

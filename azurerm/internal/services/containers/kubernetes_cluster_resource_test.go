@@ -47,7 +47,7 @@ func (t KubernetesClusterResource) Exists(ctx context.Context, clients *clients.
 		return nil, err
 	}
 
-	resp, err := clients.Containers.KubernetesClustersClient.Get(ctx, id.ResourceGroup, id.ManagedClusterName)
+	resp, err := clients.Containers.NewKubernetesClustersClient(nil).Get(ctx, id.ResourceGroup, id.ManagedClusterName)
 	if err != nil {
 		return nil, fmt.Errorf("reading Kubernetes Cluster (%s): %+v", id.String(), err)
 	}

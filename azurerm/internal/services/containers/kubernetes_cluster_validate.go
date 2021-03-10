@@ -272,7 +272,7 @@ func validateNodePoolSupportsVersion(ctx context.Context, client *client.Client,
 	}
 
 	if !versionExists {
-		cluster, err := client.KubernetesClustersClient.Get(ctx, resourceGroup, clusterName)
+		cluster, err := client.NewKubernetesClustersClient(nil).Get(ctx, resourceGroup, clusterName)
 		if err != nil {
 			if !utils.ResponseWasStatusCode(cluster.Response, http.StatusUnauthorized) {
 				return fmt.Errorf("retrieving Kubernetes Cluster %q (Resource Group %q): %+v", clusterName, resourceGroup, err)

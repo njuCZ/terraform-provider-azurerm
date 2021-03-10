@@ -5,6 +5,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
 	legacy "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-08-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-12-01/containerservice"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/common"
 )
@@ -12,13 +13,14 @@ import (
 type Client struct {
 	AgentPoolsClient         *containerservice.AgentPoolsClient
 	GroupsClient             *containerinstance.ContainerGroupsClient
-	KubernetesClustersClient *containerservice.ManagedClustersClient
 	RegistriesClient         *containerregistry.RegistriesClient
 	ReplicationsClient       *containerregistry.ReplicationsClient
 	ServicesClient           *legacy.ContainerServicesClient
 	WebhooksClient           *containerregistry.WebhooksClient
 
 	Environment azure.Environment
+
+	o *common.ClientOptions
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -35,9 +37,6 @@ func NewClient(o *common.ClientOptions) *Client {
 	o.ConfigureClient(&groupsClient.Client, o.ResourceManagerAuthorizer)
 
 	// AKS
-	kubernetesClustersClient := containerservice.NewManagedClustersClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
-	o.ConfigureClient(&kubernetesClustersClient.Client, o.ResourceManagerAuthorizer)
-
 	agentPoolsClient := containerservice.NewAgentPoolsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId)
 	o.ConfigureClient(&agentPoolsClient.Client, o.ResourceManagerAuthorizer)
 
@@ -46,12 +45,29 @@ func NewClient(o *common.ClientOptions) *Client {
 
 	return &Client{
 		AgentPoolsClient:         &agentPoolsClient,
-		KubernetesClustersClient: &kubernetesClustersClient,
 		GroupsClient:             &groupsClient,
 		RegistriesClient:         &registriesClient,
 		WebhooksClient:           &webhooksClient,
 		ReplicationsClient:       &replicationsClient,
 		ServicesClient:           &servicesClient,
 		Environment:              o.Environment,
+		o:o,
 	}
+}
+
+func (client Client) NewKubernetesClustersClient(headers map[string]interface{}) *containerservice.ManagedClustersClient {
+	kubernetesClustersClient := containerservice.NewManagedClustersClientWithBaseURI(client.o.ResourceManagerEndpoint, client.o.SubscriptionId)
+	client.o.ConfigureClient(&kubernetesClustersClient.Client, client.o.ResourceManagerAuthorizer)
+
+	if len(headers) > 0 {
+		decorate := kubernetesClustersClient.Client.RequestInspector
+		if decorate == nil {
+			decorate = autorest.WithNothing()
+		}
+		kubernetesClustersClient.Client.RequestInspector = func(p autorest.Preparer) autorest.Preparer {
+			return autorest.DecoratePreparer(p, decorate, autorest.WithHeaders(headers))
+		}
+	}
+
+	return &kubernetesClustersClient
 }

@@ -615,6 +615,14 @@ func resourceKubernetesCluster() *schema.Resource {
 				}, false),
 			},
 
+			"headers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
 			// Computed
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -711,11 +719,12 @@ func resourceKubernetesCluster() *schema.Resource {
 }
 
 func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.Client).Containers.KubernetesClustersClient
 	env := meta.(*clients.Client).Containers.Environment
 	ctx, cancel := timeouts.ForCreate(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 	tenantId := meta.(*clients.Client).Account.TenantId
+	headers := d.Get("headers").(map[string]interface{})
+	client := meta.(*clients.Client).Containers.NewKubernetesClustersClient(headers)
 
 	log.Printf("[INFO] preparing arguments for Managed Kubernetes Cluster create.")
 
@@ -890,11 +899,13 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	containersClient := meta.(*clients.Client).Containers
 	nodePoolsClient := containersClient.AgentPoolsClient
-	clusterClient := containersClient.KubernetesClustersClient
 	env := containersClient.Environment
 	ctx, cancel := timeouts.ForUpdate(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 	tenantId := meta.(*clients.Client).Account.TenantId
+
+	headers := d.Get("headers").(map[string]interface{})
+	clusterClient := meta.(*clients.Client).Containers.NewKubernetesClustersClient(headers)
 
 	log.Printf("[INFO] preparing arguments for Managed Kubernetes Cluster update.")
 
@@ -1219,7 +1230,7 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.Client).Containers.KubernetesClustersClient
+	client := meta.(*clients.Client).Containers.NewKubernetesClustersClient(nil)
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 
@@ -1371,7 +1382,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceKubernetesClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.Client).Containers.KubernetesClustersClient
+	client := meta.(*clients.Client).Containers.NewKubernetesClustersClient(nil)
 	ctx, cancel := timeouts.ForDelete(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 
