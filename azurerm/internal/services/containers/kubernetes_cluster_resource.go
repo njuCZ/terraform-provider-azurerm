@@ -22,7 +22,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/containers/parse"
 	containerValidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/containers/validate"
 	msiparse "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/msi/parse"
-	msivalidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/msi/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tags"
 	azSchema "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tf/schema"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tf/suppress"
@@ -197,38 +196,7 @@ func resourceKubernetesCluster() *schema.Resource {
 				Optional: true,
 			},
 
-			"identity": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(containerservice.ResourceIdentityTypeSystemAssigned),
-								string(containerservice.ResourceIdentityTypeUserAssigned),
-							}, false),
-						},
-						"user_assigned_identity_id": {
-							Type:         schema.TypeString,
-							ValidateFunc: msivalidate.UserAssignedIdentityID,
-							Optional:     true,
-						},
-						"principal_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tenant_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"identity": schemaKubernetesIdentity(),
 
 			"kubelet_identity": {
 				Type:     schema.TypeList,
@@ -929,6 +897,8 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	if err := validateKubernetesCluster(d, &existing, id.ResourceGroup, id.ManagedClusterName); err != nil {
 		return err
 	}
+
+	normalizeClusterUserAssignedIdentities(&existing)
 
 	if d.HasChange("service_principal") {
 		log.Printf("[DEBUG] Updating the Service Principal for Kubernetes Cluster %q (Resource Group %q)..", id.ManagedClusterName, id.ResourceGroup)
@@ -1835,31 +1805,6 @@ func expandKubernetesClusterRoleBasedAccessControl(input []interface{}, provider
 	return rbacEnabled, aad, nil
 }
 
-func expandKubernetesClusterManagedClusterIdentity(input []interface{}) *containerservice.ManagedClusterIdentity {
-	if len(input) == 0 || input[0] == nil {
-		return &containerservice.ManagedClusterIdentity{
-			Type: containerservice.ResourceIdentityTypeNone,
-		}
-	}
-
-	values := input[0].(map[string]interface{})
-
-	if containerservice.ResourceIdentityType(values["type"].(string)) == containerservice.ResourceIdentityTypeUserAssigned {
-		userAssignedIdentities := map[string]*containerservice.ManagedClusterIdentityUserAssignedIdentitiesValue{
-			values["user_assigned_identity_id"].(string): {},
-		}
-
-		return &containerservice.ManagedClusterIdentity{
-			Type:                   containerservice.ResourceIdentityType(values["type"].(string)),
-			UserAssignedIdentities: userAssignedIdentities,
-		}
-	}
-
-	return &containerservice.ManagedClusterIdentity{
-		Type: containerservice.ResourceIdentityType(values["type"].(string)),
-	}
-}
-
 func flattenKubernetesClusterRoleBasedAccessControl(input *containerservice.ManagedClusterProperties, d *schema.ResourceData) []interface{} {
 	rbacEnabled := false
 	if input.EnableRBAC != nil {
@@ -1998,44 +1943,6 @@ func flattenKubernetesClusterKubeConfigAAD(config kubernetes.KubeConfigAAD) []in
 			"username":               name,
 		},
 	}
-}
-
-func flattenKubernetesClusterManagedClusterIdentity(input *containerservice.ManagedClusterIdentity) ([]interface{}, error) {
-	// if it's none, omit the block
-	if input == nil || input.Type == containerservice.ResourceIdentityTypeNone {
-		return []interface{}{}, nil
-	}
-
-	identity := make(map[string]interface{})
-
-	identity["principal_id"] = ""
-	if input.PrincipalID != nil {
-		identity["principal_id"] = *input.PrincipalID
-	}
-
-	identity["tenant_id"] = ""
-	if input.TenantID != nil {
-		identity["tenant_id"] = *input.TenantID
-	}
-
-	identity["user_assigned_identity_id"] = ""
-	if input.UserAssignedIdentities != nil {
-		keys := []string{}
-		for key := range input.UserAssignedIdentities {
-			keys = append(keys, key)
-		}
-		if len(keys) > 0 {
-			parsedId, err := msiparse.UserAssignedIdentityID(keys[0])
-			if err != nil {
-				return nil, err
-			}
-			identity["user_assigned_identity_id"] = parsedId.ID()
-		}
-	}
-
-	identity["type"] = string(input.Type)
-
-	return []interface{}{identity}, nil
 }
 
 func flattenKubernetesClusterAutoScalerProfile(profile *containerservice.ManagedClusterPropertiesAutoScalerProfile) []interface{} {
